@@ -1,0 +1,21 @@
+:root {
+  --blanc: #FFFFFF;      /* fond */
+  --texte: #323440;      /* texte principal, bleu nuit du logo */
+  --gris: #6E717D;       /* texte secondaire */
+  --bordure: #E3E5EA;    /* lignes et contours */
+  --fond: #F6F7F9;       /* fond des encadrés */
+  /* Énergies : base (pastilles, barres), foncé (texte), clair (fond d'étiquette) */
+  --feu: #E07A4F;        --feu-fonce: #C35222;        --feu-clair: #FBEFEA;
+  --eau: #4A7FB5;        --eau-fonce: #4677AA;        --eau-clair: #E9F0F6;
+  --plante: #5E9E6E;     --plante-fonce: #4C8059;     --plante-clair: #ECF3EE;
+  --electrique: #E3B63C; --electrique-fonce: #927015; --electrique-clair: #FCF6E8;
+  --psy: #9B6FB0;        --psy-fonce: #9262A9;        --psy-clair: #F3EEF6;     
+  --combat: #A9714B;     --combat-fonce: #9D6946;     --combat-clair: #F5EEE9;
+  --obscurite: #3D5A60;  --obscurite-fonce: #2F474C;  --obscurite-clair: #E8EBEC;
+  --metal: #8A939B;      --metal-fonce: #6C767E;      --metal-clair: #F1F2F3;
+  --fee: #D88AA6;        --fee-fonce: #C24975;        --fee-clair: #FAF1F4;
+  --dragon: #9C8A4A;     --dragon-fonce: #82733E;     --dragon-clair: #F3F1E9;
+  --incolore: #A7A49C;   --incolore-fonce: #78746A;   --incolore-clair: #F4F4F3;   
+  --font-titre: "Poppins", system-ui, sans-serif;
+  --font-texte: "Inter", system-ui, sans-serif;
+}
