@@ -19,3 +19,6 @@
   --font-titre: "Poppins", system-ui, sans-serif;
   --font-texte: "Inter", system-ui, sans-serif;
 }
+*{
+  background-color: black;
+}
