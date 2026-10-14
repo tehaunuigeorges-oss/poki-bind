@@ -3,7 +3,7 @@
 //   <body data-page="collection" data-espace="membre">   (ou data-espace="visiteur")
 
 import { brancherBoutonTheme } from "./theme.js";
-import { getProfil, getPieces } from "./donnees.js";
+import { estConnecte, getProfil, getPieces } from "./donnees.js";
 import { echapper, formaterNombre, initiales } from "./outils.js";
 
 const icone = (dessin, classe = "") =>
@@ -39,10 +39,15 @@ const boutonTheme = `<button class="bouton-icone" type="button" id="bouton-theme
 const logo = (href, texte) =>
   `<a class="marque" href="${href}"><img class="logo" src="img/logos/logo-horizontal.png" alt="${texte}" width="600" height="166"></a>`;
 
-function enteteVisiteur() {
+function enteteVisiteur(connecte) {
   const marque = page === "accueil" ? "" : logo("index.html", "Pokibind, retour à l'accueil");
-  const connexion = page === "a-propos" ? '<a class="bouton bouton-petit" href="connexion.html">Se connecter</a>' : "";
-  return `<div class="wrap entete-barre">${marque}<div class="entete-actions">${connexion}${boutonTheme}</div></div>`;
+  let bouton = "";
+  if (page === "a-propos") {
+    bouton = connecte
+      ? '<a class="bouton bouton-petit" href="collection.html">Ma collection</a>'
+      : '<a class="bouton bouton-petit" href="connexion.html">Se connecter</a>';
+  }
+  return `<div class="wrap entete-barre">${marque}<div class="entete-actions">${bouton}${boutonTheme}</div></div>`;
 }
 
 function enteteMembre(profil, pieces) {
@@ -68,13 +73,29 @@ const piedDePage = `<div class="wrap pied-contenu">
     <p>Pokibind est un site de fans, non officiel, non affilié à Nintendo, Creatures, GAME FREAK ou The Pokémon Company.</p>
   </div>`;
 
+// Page actuelle avec ses paramètres, pour y revenir après la connexion (ex. « set.html?id=sv08.5 »)
+const pageActuelle = () => location.pathname.split("/").pop() + location.search;
+
 async function afficher() {
+  const connecte = await estConnecte();
+
+  // L'espace membre est réservé aux personnes connectées ; une fois connecté,
+  // l'accueil et la page de connexion mènent directement à la collection.
+  if (espace === "membre" && !connecte) {
+    location.replace(`connexion.html?retour=${encodeURIComponent(pageActuelle())}`);
+    return;
+  }
+  if (connecte && (page === "accueil" || page === "connexion")) {
+    location.replace("collection.html");
+    return;
+  }
+
   const entete = document.getElementById("entete");
   if (espace === "membre") {
     const [profil, pieces] = await Promise.all([getProfil(), getPieces()]);
     entete.innerHTML = enteteMembre(profil, pieces);
   } else {
-    entete.innerHTML = enteteVisiteur();
+    entete.innerHTML = enteteVisiteur(connecte);
   }
   document.getElementById("pied").innerHTML = piedDePage;
   brancherBoutonTheme(document.getElementById("bouton-theme"));
