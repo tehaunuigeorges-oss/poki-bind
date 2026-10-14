@@ -1,24 +1,43 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Poki Bind</title>
-    <meta name="description" content="Ton classeur de cartes Pokémon numérique : collection, binders, progression et valeur.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pokibind · ton classeur de cartes Pokémon</title>
+  <meta name="description" content="Ton classeur de cartes Pokémon numérique : collection, binders, progression et valeur.">
 
-    <link rel="icon" href="icons/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-    <meta property="og:title" content="Poki Bind">
-    <meta property="og:description" content="Ton classeur de cartes Pokémon numérique : collection, binders, progression et valeur.">
-    <meta property="og:image" content="img/partage/image-de-partage.png">
-    <meta property="og:type" content="website">
+  <meta property="og:title" content="Pokibind">
+  <meta property="og:description" content="Ton classeur de cartes Pokémon numérique : collection, binders, progression et valeur.">
+  <meta property="og:image" content="img/partage/image-de-partage.png">
+  <meta property="og:type" content="website">
 
-    <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
 </head>
-<body>
-    <img src="img/binders/fleurs-couverture.webp" alt="binder" width="800" height="1100">
+<body data-page="accueil" data-espace="visiteur">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="tete-page">
+      <h1>Ton classeur de cartes Pokémon, en numérique</h1>
+      <p>L'accueil complet arrive à l'étape 2. En attendant, tu peux parcourir l'espace membre.</p>
+    </div>
+    <div class="boutons">
+      <a class="bouton" href="collection.html">Voir l'espace membre</a>
+      <a class="bouton bouton-secondaire" href="a-propos.html">En savoir plus</a>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
 </body>
 </html>
