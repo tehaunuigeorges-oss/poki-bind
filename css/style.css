@@ -144,9 +144,10 @@ button { cursor: pointer; }
   color: var(--muted);
 }
 
-/* Logos : leur fond blanc se fond dans la page ; en mode sombre, le logo s'éclaircit */
-.logo { mix-blend-mode: multiply; }
-body.dark .logo { filter: invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
+/* Logos : leur fond blanc se fond dans la page ; en mode sombre, le logo s'éclaircit.
+   brightness(1.04) rend parfaitement blanc leur fond presque blanc (valeurs 247 à 255). */
+.logo { filter: brightness(1.04); mix-blend-mode: multiply; }
+body.dark .logo { filter: brightness(1.04) invert(1) hue-rotate(180deg); mix-blend-mode: screen; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -388,3 +389,141 @@ select.champ {
 }
 
 .champ-aide { font-size: 12px; font-weight: 400; color: var(--muted); }
+
+
+/* ---------- 9. Accueil (index.html) ---------- */
+
+main.accueil { padding-block: 0; }
+
+.hero {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 22px;
+  min-height: calc(100vh - 65px);
+  min-height: calc(100svh - 65px);
+  padding-block: 24px 48px;
+  text-align: center;
+}
+.hero h1 { max-width: 22ch; font-size: clamp(24px, 3.4vw, 34px); }
+.hero p { max-width: 46ch; color: var(--muted); }
+.hero small { font-size: 13px; color: var(--muted); }
+.hero small a { color: var(--ink); text-underline-offset: 3px; }
+
+/* Les 11 énergies disposées en cercle autour du logo */
+.anneau {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(380px, 82vw);
+  aspect-ratio: 1;
+}
+.anneau .logo { width: 52%; height: auto; }
+.anneau .energie {
+  position: absolute;
+  width: 11%;
+  height: auto;
+  /* --x et --y : position sur un cercle de rayon 44,5 % (360° ÷ 11 énergies) */
+  left: calc(50% + var(--x) - 5.5%);
+  top: calc(50% + var(--y) - 5.5%);
+}
+
+.boutons-hero { justify-content: center; margin-top: 6px; }
+.boutons-hero .bouton { padding: 13px 26px; font-size: 15px; }
+
+
+/* ---------- 10. En savoir plus (a-propos.html) ---------- */
+
+main.a-propos { gap: 44px; }
+
+.retour { justify-self: start; font-size: 13px; color: var(--muted); text-decoration: none; }
+.retour:hover { color: var(--ink); text-decoration: underline; }
+
+.intro { display: grid; gap: 10px; }
+.intro p { max-width: 60ch; color: var(--muted); }
+
+.section { display: grid; gap: 16px; }
+
+.etapes, .fonctions, .bon-a-savoir {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Grilles de blocs : 1 colonne sur téléphone, 2 sur tablette, 3 sur ordinateur */
+.etapes, .fonctions { display: grid; gap: 14px; }
+@media (min-width: 560px) {
+  .etapes, .fonctions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 860px) {
+  .etapes, .fonctions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.bloc {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.bloc p { font-size: 14px; color: var(--muted); }
+.bloc img { width: 30px; height: 30px; }
+
+/* Numéros des étapes dans des pastilles rondes */
+.etapes { counter-reset: etape; }
+.etapes .bloc::before {
+  counter-increment: etape;
+  content: counter(etape);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-titre);
+  font-size: 14px;
+}
+
+.bon-a-savoir { display: grid; gap: 10px; }
+.bon-a-savoir li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+  font-size: 14px;
+}
+.bon-a-savoir li::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.faq { display: grid; gap: 8px; }
+.faq details {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+}
+.faq summary { font-weight: 500; cursor: pointer; }
+.faq details p { margin-top: 8px; font-size: 14px; color: var(--muted); }
+
+/* Bandeau final « Prêt à ranger ta collection ? » */
+.appel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+.appel p { font-weight: 500; }
