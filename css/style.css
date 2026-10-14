@@ -705,7 +705,7 @@ main.a-propos { gap: 44px; }
   border-radius: 4px;
   background: color-mix(in srgb, var(--teinte) 40%, #fff);
 }
-.visuel-carte.sans-image img { display: none; }
+.visuel-carte.sans-image img, .visuel-carte.sans-image .langue-image { display: none; }
 .visuel-carte.sans-image .carte-remplacement {
   position: absolute;
   inset: 0;
@@ -719,6 +719,24 @@ main.a-propos { gap: 44px; }
   line-height: 1.2;
 }
 .carte-remplacement .num { font-size: .8em; font-weight: 500; opacity: .75; }
+.carte-sans-image { position: relative; font-size: .75em; font-weight: 500; text-align: center; opacity: .75; }
+
+/* Pastille « EN » : image anglaise, faute d'image française chez TCGdex */
+.langue-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+}
+.note-image { display: none; margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; }
+.visuel-carte.chargee ~ .note-image { display: block; }
 
 /* Emplacements gris qui clignotent pendant un chargement */
 .squelette {

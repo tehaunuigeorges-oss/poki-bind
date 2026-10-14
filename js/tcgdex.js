@@ -113,6 +113,14 @@ export function imageCarte(base, taille = "low") {
   return typeof base === "string" && base.startsWith("https://") ? `${base}/${taille}.webp` : null;
 }
 
+// TCGdex n'a pas d'image française pour environ une carte sur six, mais il a parfois l'anglaise,
+// rangée de la même façon (série, set, numéro). Si elle n'existe pas non plus, l'image ne se charge
+// pas et la carte de remplacement s'affiche (voir visuel-carte.js).
+export function imageDeSecours(serie, set, numero) {
+  if (!serie || !set) return null;
+  return `https://assets.tcgdex.net/en/${[serie, set, numero].map(encodeURIComponent).join("/")}`;
+}
+
 // Numéro comparable : « 074 » → « 74 », « TG01 » → « tg1 »
 const cleNumero = (numero) => normaliser(numeroLisible(numero)).replace(/(^|\D)0+(?=\d)/g, "$1");
 
@@ -155,11 +163,13 @@ async function construireIndex() {
     const idSet = setDeCarte(carte.id);
     const set = sets.get(idSet);
     if (set && SERIES_IGNOREES.has(set.serie.id)) continue;
+    const numero = numeroLisible(carte.localId);
     cartes.push({
       id: carte.id,
       nom: carte.name,
-      numero: numeroLisible(carte.localId),
+      numero,
       image: carte.image ?? null,
+      imageSecours: carte.image ? null : imageDeSecours(set?.serie.id, idSet, numero),
       set: idSet,
       cle: normaliser(carte.name),
       cleNumero: cleNumero(carte.localId),

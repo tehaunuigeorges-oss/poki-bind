@@ -120,14 +120,46 @@ function afficherResultats() {
   majBoutonPlus();
 }
 
-boutonPlus.addEventListener("click", () => {
+// Affiche les résultats suivants jusqu'au nombre demandé ; renvoie la place de la première carte ajoutée.
+function afficherJusqua(nombre) {
   const debut = affichees;
-  affichees = Math.min(affichees + PAR_PAGE, resultats.length);
+  affichees = Math.min(nombre, resultats.length);
   grille.insertAdjacentHTML("beforeend", resultats.slice(debut, affichees).map(tuile).join(""));
   majBoutonPlus();
+  return debut;
+}
+
+boutonPlus.addEventListener("click", () => {
+  const debut = afficherJusqua(affichees + PAR_PAGE);
   // Au clavier, on continue sur la première carte ajoutée
   grille.children[debut]?.querySelector("a")?.focus();
 });
+
+// ---------- Retour depuis une fiche : même liste, même hauteur ----------
+// Le navigateur ne sait pas replacer la page tout seul : les résultats arrivent après son chargement.
+
+const CLE_POSITION = "pokibind-recherche-position";
+history.scrollRestoration = "manual";
+
+addEventListener("pagehide", () => {
+  try {
+    sessionStorage.setItem(CLE_POSITION, JSON.stringify({ adresse: location.search, affichees, hauteur: scrollY }));
+  } catch (erreur) {
+    // Stockage bloqué : on reviendra simplement en haut de la liste.
+  }
+});
+
+function replacerLaPage() {
+  try {
+    const position = JSON.parse(sessionStorage.getItem(CLE_POSITION));
+    sessionStorage.removeItem(CLE_POSITION);
+    if (!position || position.adresse !== location.search) return;
+    if (position.affichees > affichees) afficherJusqua(position.affichees);
+    scrollTo(0, position.hauteur);
+  } catch (erreur) {
+    // Position illisible : on reste en haut de la page.
+  }
+}
 
 // ---------- Saisie ----------
 
@@ -195,6 +227,7 @@ async function chargerIndex() {
     index.series.map((serie) => `<option value="${echapper(serie.id)}">${echapper(serie.nom)}</option>`).join(""));
   if (index.series.some((serie) => serie.id === serieDemandee)) choixSerie.value = serieDemandee;
   afficherResultats();
+  replacerLaPage();
 }
 
 document.getElementById("bouton-reessayer").addEventListener("click", chargerIndex);

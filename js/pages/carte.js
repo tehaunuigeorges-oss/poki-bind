@@ -1,7 +1,7 @@
 // Fiche d'une carte (carte.html?id=sv08.5-074) : image, variantes avec le nombre d'exemplaires,
 // informations, prix Cardmarket de la variante choisie et sa courbe.
 
-import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, ErreurTcgdex } from "../tcgdex.js";
+import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, ErreurTcgdex } from "../tcgdex.js";
 import { getCarteDeCollection, ajouterCarte, retirerCarte } from "../donnees.js";
 import { visuelCarte } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
@@ -11,6 +11,17 @@ const squelette = zone.innerHTML;
 const id = new URLSearchParams(location.search).get("id") ?? "";
 
 const TYPES = ["feu", "eau", "plante", "electrique", "psy", "combat", "obscurite", "metal", "fee", "dragon", "incolore"];
+
+// Page de recherche d'où l'on vient (avec ses paramètres, ex. « recherche.html?q=salameche »), ou null.
+const recherchePrecedente = (() => {
+  try {
+    const precedente = new URL(document.referrer);
+    const page = precedente.pathname.split("/").pop();
+    return precedente.origin === location.origin && /^recherche(\.html)?$/.test(page) ? page + precedente.search : null;
+  } catch (erreur) {
+    return null;
+  }
+})();
 
 let carte = null;    // réponse de TCGdex
 let variantes = [];  // voir variantesDeCarte dans tcgdex.js
@@ -161,13 +172,20 @@ function afficher(set) {
   const teinte = TYPES.find((type) => type === normaliser(carte.types?.[0])) ?? "";
   document.title = `${carte.name} · ${nomSet} · Pokibind`;
 
+  // Venu de la recherche, le lien du haut y ramène ; sinon, il mène au set de la carte.
+  const lienRetour = recherchePrecedente
+    ? `<a class="retour" id="retour-recherche" href="${echapper(recherchePrecedente)}">← Retour à la recherche</a>`
+    : `<a class="retour" href="set.html?id=${encodeURIComponent(carte.set?.id ?? setDeCarte(carte.id))}">← ${echapper(nomSet || "Voir le set")}</a>`;
+  const imageSecours = carte.image ? null : imageDeSecours(set?.serie?.id, carte.set?.id ?? setDeCarte(carte.id), numero);
+
   zone.removeAttribute("aria-busy");
   zone.innerHTML = `
-    <a class="retour" href="set.html?id=${encodeURIComponent(carte.set?.id ?? setDeCarte(carte.id))}">← ${echapper(nomSet || "Voir le set")}</a>
+    ${lienRetour}
     <div class="fiche">
       <div class="fiche-visuel">
-        ${visuelCarte({ nom: carte.name, numero: numeroComplet, image: carte.image },
+        ${visuelCarte({ nom: carte.name, numero: numeroComplet, image: carte.image, imageSecours },
           { taille: "high", prioritaire: true, alt: `Carte ${carte.name}, ${nomSet} ${numeroComplet}`, teinte })}
+        ${imageSecours ? '<p class="note-image">Image en anglais : TCGdex n\'a pas encore l\'image française de cette carte.</p>' : ""}
       </div>
       <div class="fiche-infos">
         <div class="fiche-titre">
@@ -223,6 +241,14 @@ async function changerQuantite(cle, difference) {
 }
 
 zone.addEventListener("click", (evenement) => {
+  // Retour à la recherche : comme le bouton Retour du navigateur, qui garde la place dans la liste.
+  // Fiche ouverte dans un nouvel onglet : pas de page précédente, le lien s'ouvre normalement.
+  const nouvelOnglet = evenement.ctrlKey || evenement.metaKey || evenement.shiftKey;
+  if (evenement.target.closest("#retour-recherche") && history.length > 1 && !nouvelOnglet) {
+    evenement.preventDefault();
+    history.back();
+    return;
+  }
   const bouton = evenement.target.closest("button");
   if (!bouton || bouton.getAttribute("aria-disabled") === "true") return;
   const { choisir: aChoisir, ajouter, retirer } = bouton.dataset;
