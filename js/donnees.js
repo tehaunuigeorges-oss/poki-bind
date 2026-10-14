@@ -14,6 +14,11 @@ function lire(cle, valeurParDefaut) {
   }
 }
 
+// Lève une erreur si le navigateur refuse d'enregistrer (stockage bloqué ou plein).
+function ecrire(cle, valeur) {
+  localStorage.setItem(PREFIXE + cle, JSON.stringify(valeur));
+}
+
 // ---------- Session (façade en v1 : aucun mot de passe n'est vérifié ni enregistré) ----------
 // « Rester connecté » coché : la session est gardée dans localStorage (elle survit à la fermeture
 // du navigateur) ; sinon dans sessionStorage (elle disparaît quand on ferme le navigateur).
@@ -64,4 +69,49 @@ export async function getProfil() {
 
 export async function getPieces() {
   return lire("pieces", 0);
+}
+
+// ---------- Collection ----------
+// Une entrée par carte, avec le nombre d'exemplaires de chaque variante :
+// { "sv08.5-074": { id, nom, numero, image, set: { id, nom, officiel }, langue: "fr",
+//                   variantes: { normale: 1, reverse: 2 }, prix: { normale: 0.02, … }, prixLe, ajouteeLe } }
+// Variantes : normale, reverse, holo, pokeball, masterball (voir VARIANTES dans tcgdex.js).
+
+const MAX_EXEMPLAIRES = 999;
+
+export async function getCollection() {
+  return Object.values(lire("collection", {}));
+}
+
+// L'entrée d'une carte, ou null si elle n'est pas dans la collection.
+export async function getCarteDeCollection(id) {
+  return lire("collection", {})[id] ?? null;
+}
+
+// Ajoute des exemplaires d'une variante. « carte » : le résumé de la carte (resumeCarte dans tcgdex.js),
+// qui remet aussi à jour ses informations et ses prix. Renvoie l'entrée mise à jour.
+export async function ajouterCarte(carte, variante, nombre = 1) {
+  return modifierExemplaires(carte.id, variante, nombre, carte);
+}
+
+// Retire des exemplaires d'une variante ; la carte quitte la collection quand il n'en reste aucun.
+// Renvoie l'entrée mise à jour, ou null si la carte n'est plus dans la collection.
+export async function retirerCarte(id, variante, nombre = 1) {
+  return modifierExemplaires(id, variante, -nombre);
+}
+
+function modifierExemplaires(id, variante, difference, resume = null) {
+  const collection = lire("collection", {});
+  const entree = collection[id] ?? (resume && { variantes: {}, ajouteeLe: new Date().toISOString() });
+  if (!entree) return null;
+  if (resume) Object.assign(entree, resume);
+
+  const quantite = Math.min(MAX_EXEMPLAIRES, Math.max(0, (entree.variantes[variante] ?? 0) + difference));
+  if (quantite > 0) entree.variantes[variante] = quantite;
+  else delete entree.variantes[variante];
+
+  if (Object.keys(entree.variantes).length > 0) collection[id] = entree;
+  else delete collection[id];
+  ecrire("collection", collection);
+  return collection[id] ?? null;
 }

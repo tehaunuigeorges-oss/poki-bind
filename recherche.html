@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Rechercher une carte · Pokibind</title>
-  <meta name="description" content="Cherche une carte par son nom ou son numéro.">
+  <meta name="description" content="Cherche une carte Pokémon par son nom ou son numéro, puis ajoute-la à ta collection.">
 
   <link rel="icon" href="icons/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/recherche.js"></script>
 </head>
 <body data-page="recherche" data-espace="membre">
   <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
@@ -25,8 +26,34 @@
   <main class="wrap" id="contenu">
     <div class="tete-page">
       <h1>Rechercher une carte</h1>
-      <p>Cette page arrive à l'étape 4.</p>
+      <p>Tape un nom ou un numéro, puis ajoute la carte en un clic.</p>
     </div>
+
+    <form class="recherche" id="formulaire-recherche" role="search" novalidate>
+      <div class="recherche-texte">
+        <label class="sr-only" for="requete">Nom ou numéro de la carte</label>
+        <input class="champ" id="requete" name="q" type="search" placeholder="Ex. Évoli ou 074/131" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      </div>
+      <div>
+        <label class="sr-only" for="serie">Série</label>
+        <select class="champ" id="serie" name="serie">
+          <option value="">Toutes les séries</option>
+        </select>
+      </div>
+      <button class="bouton" type="submit">Rechercher</button>
+    </form>
+
+    <section class="resultats" aria-labelledby="resume-resultats">
+      <p class="surtitre num" id="resume-resultats" role="status"></p>
+      <div class="encart encart-erreur" id="erreur-recherche" role="alert" hidden>
+        <p id="texte-erreur"></p>
+        <button class="bouton bouton-petit" id="bouton-reessayer" type="button">Réessayer</button>
+      </div>
+      <p class="aide-resultats" id="aucun-resultat" hidden>Vérifie l'orthographe, choisis « Toutes les séries » ou essaie le numéro de la carte, par exemple 074/131.</p>
+      <ul class="grille-cartes" id="resultats"></ul>
+      <button class="bouton bouton-secondaire" id="voir-plus" type="button" hidden>Voir plus de cartes</button>
+    </section>
+    <p class="annonce" id="annonce" role="status"></p>
   </main>
 
   <footer class="pied" id="pied"></footer>

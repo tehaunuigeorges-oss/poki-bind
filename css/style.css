@@ -671,3 +671,280 @@ main.a-propos { gap: 44px; }
 }
 
 .note-auth { max-width: 420px; font-size: 12px; color: var(--muted); text-align: center; }
+
+
+
+/* ---------- 12. Cartes : visuel, chargement, messages (recherche, fiche carte…) ---------- */
+
+/* Visuel d'une carte (js/visuel-carte.js) : image TCGdex 245 × 337, ou carte de remplacement */
+.visuel-carte {
+  position: relative;
+  display: block;
+  aspect-ratio: 245 / 337;
+  border-radius: 4.5% / 3.3%;
+  background: var(--surface);
+  container-type: inline-size;
+}
+.visuel-carte:not(.chargee, .sans-image) { animation: lueur 1.4s ease-in-out infinite; }
+.visuel-carte.chargee { background: none; }
+.visuel-carte img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+
+/* Carte de remplacement : la couleur suit le type du Pokémon (--teinte) */
+.carte-remplacement { display: none; }
+.visuel-carte.sans-image {
+  --teinte: var(--incolore);
+  overflow: hidden;
+  border: 3px solid color-mix(in srgb, var(--teinte) 55%, #E9C46A);
+  border-radius: 8px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--teinte) 22%, #fff), color-mix(in srgb, var(--teinte) 70%, #fff));
+}
+.visuel-carte.sans-image::before {
+  content: "";
+  position: absolute;
+  inset: 16% 10% 40%;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--teinte) 40%, #fff);
+}
+.visuel-carte.sans-image img { display: none; }
+.visuel-carte.sans-image .carte-remplacement {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 5% 7%;
+  color: #1D1E24;
+  font-size: clamp(10px, 7cqi, 18px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.carte-remplacement .num { font-size: .8em; font-weight: 500; opacity: .75; }
+
+/* Emplacements gris qui clignotent pendant un chargement */
+.squelette {
+  display: block;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  animation: lueur 1.4s ease-in-out infinite;
+}
+.squelette.courte { width: 45%; }
+.squelette.titre { width: 60%; height: 32px; }
+@keyframes lueur { 50% { opacity: .45; } }
+
+/* Encadré de message (carte introuvable, erreur de connexion…) */
+.encart {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+}
+.encart h1 { font-size: 22px; }
+.encart p { color: var(--muted); }
+.encart-erreur { border-color: color-mix(in srgb, var(--alert) 35%, transparent); background: var(--alert-bg); }
+.encart-erreur p { color: var(--ink); }
+
+/* Petit message en bas de l'écran (annoncer, dans js/outils.js). Vide, il reste en place mais
+   invisible : les lecteurs d'écran annoncent ainsi chaque nouveau message. */
+.annonce {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 40;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 10px 18px;
+  border-radius: var(--rayon-m);
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 14px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / .18);
+  transform: translateX(-50%);
+}
+.annonce:empty { padding: 0; box-shadow: none; }
+@media (max-width: 959px) {
+  body[data-espace="membre"] .annonce { bottom: calc(var(--hauteur-onglets) + 12px + env(safe-area-inset-bottom)); }
+}
+
+
+/* ---------- 13. Recherche (recherche.html) ---------- */
+
+.recherche {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+.recherche-texte { grid-column: 1 / -1; }
+.recherche input[type="search"] { -webkit-appearance: none; appearance: none; }
+@media (min-width: 720px) {
+  .recherche { grid-template-columns: minmax(0, 1fr) 220px auto; }
+  .recherche-texte { grid-column: auto; }
+}
+
+.resultats { display: grid; gap: 16px; }
+.aide-resultats { font-size: 14px; color: var(--muted); }
+#voir-plus { justify-self: center; }
+
+.grille-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 22px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tuile { position: relative; display: grid; align-content: start; gap: 8px; min-width: 0; }
+.tuile .squelette { height: 10px; }
+.tuile .squelette.courte { width: 55%; }
+.tuile-lien { display: grid; gap: 8px; color: inherit; text-decoration: none; border-radius: var(--rayon-s); }
+.tuile-lien .visuel-carte { transition: transform .15s; }
+.tuile-lien:hover .visuel-carte { transform: translateY(-3px); }
+.tuile-texte {
+  display: grid;
+  padding-right: 36px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.tuile-texte > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tuile-nom { font-size: 13px; font-weight: 500; color: var(--ink); }
+
+/* Bouton « + » (ajout rapide), remplacé par une coche verte quand la carte est dans la collection */
+.ajout-rapide {
+  position: absolute;
+  right: 0;
+  bottom: 11px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink);
+}
+.ajout-rapide svg { width: 16px; height: 16px; }
+button.ajout-rapide:hover { border-color: var(--ink); }
+.ajout-rapide.en-cours { opacity: .5; cursor: progress; }
+.ajout-rapide.possede { border-color: var(--good); background: var(--good); color: var(--bg); }
+
+
+/* ---------- 14. Fiche carte (carte.html) ---------- */
+
+.fiche-page { display: grid; gap: 24px; }
+.fiche-page > .squelette { width: 140px; }
+
+.fiche { display: grid; gap: 28px; align-items: start; }
+.fiche-visuel { justify-self: center; width: min(300px, 82%); }
+.fiche-infos { display: grid; gap: 26px; min-width: 0; }
+.fiche-titre { display: grid; gap: 6px; }
+.fiche-titre h1 { font-size: clamp(30px, 7vw, 40px); }
+.fiche-bloc { display: grid; gap: 10px; }
+
+@media (min-width: 760px) {
+  .fiche { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 48px; }
+  .fiche-visuel { position: sticky; top: 24px; width: 100%; }
+}
+
+/* Variantes : choisir celle dont on voit le prix, et compter ses exemplaires */
+.variantes { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.variante {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+  background: var(--bg);
+}
+.variante.est-choisie { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.variante-choix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 12px;
+  min-height: 46px;
+  padding: 8px 4px 8px 14px;
+  border: 0;
+  border-radius: var(--rayon-m);
+  background: none;
+  font-size: 14px;
+  text-align: left;
+}
+.variante-prix { white-space: nowrap; }
+.variante-prix.indisponible, .variante.absente small { font-size: 12px; color: var(--muted); }
+.variante.absente {
+  display: block;
+  padding: 12px 14px;
+  border-style: dashed;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.quantite { display: flex; align-items: center; gap: 2px; }
+.quantite button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink);
+}
+.quantite button:hover { border-color: var(--ink); }
+.quantite button[aria-disabled="true"] { opacity: .35; cursor: default; }
+.quantite button[aria-disabled="true"]:hover { border-color: var(--line); }
+.quantite svg { width: 14px; height: 14px; }
+.quantite .num { min-width: 26px; font-size: 14px; text-align: center; color: var(--muted); }
+.variante.possedee .quantite .num { font-weight: 600; color: var(--ink); }
+
+/* Numéro, rareté, type, sortie du set */
+.fiche-faits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+.fiche-faits div { display: grid; align-content: start; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.fiche-faits div:nth-child(odd) { padding-right: 16px; }
+.fiche-faits dd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.type { display: inline-flex; align-items: center; gap: 8px; }
+.type img { width: 20px; height: 20px; }
+
+/* Prix Cardmarket de la variante choisie */
+.prix {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+}
+.prix-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.prix-valeur { font-family: var(--font-titre); font-size: 30px; font-weight: 400; line-height: 1.2; }
+.prix-valeur.indisponible { font-size: 20px; color: var(--muted); }
+.prix-note { font-size: 13px; color: var(--muted); }
+.hausse { font-size: 13px; color: var(--good); }
+.baisse { font-size: 13px; color: var(--down); }
+
+.courbe { width: 100%; height: 70px; overflow: visible; }
+.courbe-grille { fill: none; stroke: var(--line); vector-effect: non-scaling-stroke; }
+.courbe-aire { fill: currentColor; opacity: .12; }
+.courbe-ligne { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.courbe-point { stroke: currentColor; stroke-width: 7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+
+@media (max-width: 759px) {
+  .fiche-actions .bouton { flex: 1 1 100%; }
+}

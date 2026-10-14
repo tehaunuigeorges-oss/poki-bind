@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/carte.js"></script>
 </head>
 <body data-page="carte" data-espace="membre">
   <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
@@ -23,10 +24,21 @@
   <header class="entete" id="entete"></header>
 
   <main class="wrap" id="contenu">
-    <div class="tete-page">
-      <h1>Fiche carte</h1>
-      <p>Cette page arrive à l'étape 4.</p>
+    <div class="fiche-page" id="fiche-page" aria-busy="true">
+      <span class="squelette courte"></span>
+      <div class="fiche">
+        <div class="fiche-visuel"><span class="visuel-carte"></span></div>
+        <div class="fiche-infos" aria-hidden="true">
+          <span class="squelette courte"></span>
+          <span class="squelette titre"></span>
+          <span class="squelette"></span>
+          <span class="squelette"></span>
+          <span class="squelette"></span>
+        </div>
+      </div>
+      <h1 class="sr-only">Chargement de la carte…</h1>
     </div>
+    <p class="annonce" id="annonce" role="status"></p>
   </main>
 
   <footer class="pied" id="pied"></footer>

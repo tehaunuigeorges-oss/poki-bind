@@ -1,0 +1,36 @@
+// Visuel d'une carte : son image TCGdex, ou une carte de remplacement (nom et numéro)
+// quand l'image n'existe pas ou ne se charge pas. Pendant le chargement, le cadre clignote doucement.
+
+import { echapper } from "./outils.js";
+import { imageCarte } from "./tcgdex.js";
+
+const TAILLES = { low: [245, 337], high: [600, 825] };
+
+// carte : { nom, numero, image } ; options : taille "low" ou "high", texte alternatif,
+// prioritaire (image visible dès l'ouverture de la page), teinte (couleur de la carte de remplacement).
+export function visuelCarte(carte, { taille = "low", alt = "", prioritaire = false, teinte = "" } = {}) {
+  const adresse = imageCarte(carte.image, taille);
+  const style = teinte ? ` style="--teinte: var(--${echapper(teinte)})"` : "";
+  const remplacement = `<span class="carte-remplacement" aria-hidden="true"><span>${echapper(carte.nom)}</span><span class="num">${echapper(carte.numero)}</span></span>`;
+  if (!adresse) {
+    return `<span class="visuel-carte sans-image"${style}${alt ? ` role="img" aria-label="${echapper(alt)}"` : ""}>${remplacement}</span>`;
+  }
+  const [largeur, hauteur] = TAILLES[taille];
+  const chargement = prioritaire ? 'fetchpriority="high"' : 'loading="lazy"';
+  return `<span class="visuel-carte"${style}>${remplacement}<img src="${echapper(adresse)}" alt="${echapper(alt)}" width="${largeur}" height="${hauteur}" ${chargement} decoding="async"></span>`;
+}
+
+// Les événements load et error des images ne remontent pas : on les écoute en phase de capture.
+document.addEventListener("load", (evenement) => {
+  if (evenement.target.matches?.(".visuel-carte img")) evenement.target.parentElement.classList.add("chargee");
+}, true);
+document.addEventListener("error", (evenement) => {
+  const image = evenement.target;
+  if (!image.matches?.(".visuel-carte img")) return;
+  const visuel = image.parentElement;
+  visuel.classList.add("sans-image");
+  if (image.alt) {
+    visuel.setAttribute("role", "img");
+    visuel.setAttribute("aria-label", image.alt);
+  }
+}, true);
