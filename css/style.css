@@ -1443,3 +1443,6 @@ body.dark .pochette-ajout:hover, body.dark .pochette-ajout:focus-visible { backg
   background: var(--bg);
   font-size: 14px;
 }
+.tuile-ajout.epuisee .visuel-carte { filter: grayscale(1) opacity(.5); }
+.grille-ajout .aide-resultats { grid-column: 1 / -1; }
+.grille-ajout .aide-resultats a { color: var(--ink); text-underline-offset: 3px; }

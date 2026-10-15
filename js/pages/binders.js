@@ -1,14 +1,13 @@
 // Mes binders : un rayon de couvertures ; un clic ouvre le binder en double page de 3 × 3 pochettes
-// (une seule page sur téléphone). Les cartes s'ajoutent depuis le binder (« Ajouter des cartes », ou le « + »
+// (une seule page sur téléphone). Les cartes de la collection s'ajoutent depuis le binder (« Ajouter des cartes », ou le « + »
 // d'une pochette vide pour choisir sa place) ou depuis la fiche d'une carte (« Placer dans un binder »).
 // Une carte se déplace en la glissant sur une autre pochette, ou avec son bouton « Déplacer ».
 
 import { getBinders, creerBinder, modifierBinder, supprimerBinder, placerCarte, deplacerCarte, retirerDuBinder,
-  nombreDeCartes, getCouverturesDebloquees } from "../donnees.js";
-import { getIndex, chercherCartes, ErreurTcgdex } from "../tcgdex.js";
+  nombreDeCartes, getCouverturesDebloquees, getCollection, nombreExemplaires, placementsDe, ErreurBinder } from "../donnees.js";
 import { COUVERTURES, couverture, estDebloquee } from "../couvertures.js";
-import { visuelCarte, illustration } from "../visuel-carte.js";
-import { echapper, formaterNombre, annoncer } from "../outils.js";
+import { visuelCarte } from "../visuel-carte.js";
+import { echapper, formaterNombre, normaliser, annoncer } from "../outils.js";
 
 const PAR_PAGE = 9;
 const etagere = document.getElementById("etagere");
@@ -131,7 +130,7 @@ function afficherBinder() {
       ${page(premierePage, "gauche")}
       ${pagesVisibles() === 2 ? `<div class="anneaux" aria-hidden="true"><i></i><i></i><i></i></div>${page(premierePage + 1, "droite")}` : ""}
     </div>
-    <p class="note-page">Le « + » d'une pochette vide y ajoute une carte. Pour déplacer une carte, glisse-la sur une autre pochette, ou utilise son bouton <span aria-hidden="true">✥</span> « Déplacer » (sur téléphone aussi). Le « × » retire la carte du binder, sans toucher à ta collection.</p>`;
+    <p class="note-page">Seules les cartes de ta collection vont dans un binder, autant de fois que tu as d'exemplaires. Le « + » d'une pochette vide y ajoute une carte. Pour déplacer une carte, glisse-la sur une autre pochette, ou utilise son bouton <span aria-hidden="true">✥</span> « Déplacer » (sur téléphone aussi). Le « × » retire la carte du binder, sans toucher à ta collection.</p>`;
 }
 
 function memoriserDansAdresse() {
@@ -247,8 +246,9 @@ document.getElementById("bouton-supprimer").addEventListener("click", async () =
   document.getElementById("bouton-nouveau").focus();
 });
 
-// ---------- Fenêtre : ajouter des cartes au binder ouvert ----------
-// Même recherche que la page Rechercher (sans accents, par nom ou numéro), dans le binder.
+// ---------- Fenêtre : ajouter des cartes de la collection au binder ouvert ----------
+// Seules tes cartes y sont proposées (sans accents, par nom ou numéro), avec le nombre
+// d'exemplaires encore libres : une carte ne peut pas être placée plus de fois que tu l'as.
 
 const fenetreAjout = document.getElementById("fenetre-ajout");
 const champAjout = document.getElementById("requete-ajout");
@@ -257,7 +257,7 @@ const resultatsAjout = document.getElementById("resultats-ajout");
 const plusAjout = document.getElementById("plus-ajout");
 const annonceAjout = document.getElementById("annonce-ajout");
 const PAR_LOT = 30;
-let index = null;
+let collection = [];
 let trouvees = [];
 let montrees = 0;
 let ajoutees = 0;
@@ -265,31 +265,30 @@ let minuterie = 0;
 let cibleAjout = null;     // pochette choisie avec son « + » (null : première pochette vide)
 let derniereAjoutee = null;
 
-function infosSet(carte) {
-  const set = index.sets.get(carte.set);
-  return { set, nomSet: set?.nom ?? carte.set.toUpperCase(), numero: set?.officiel ? `${carte.numero}/${set.officiel}` : carte.numero };
+const libresRestants = (entree) => nombreExemplaires(entree) - placementsDe(libres, entree.id);
+const sansZeros = (texte) => normaliser(texte).replace(/(^|\D)0+(?=\d)/g, "$1");
+
+// Chaque mot doit être dans le nom ou être le numéro (« 74 », « 074/131 »).
+function correspond(entree, mots) {
+  const nom = normaliser(entree.nom);
+  const numero = sansZeros(entree.numero);
+  return mots.every((mot) => nom.includes(mot) || sansZeros(mot) === numero);
 }
 
-function dansLeBinder(id) {
-  return ouvert.cartes.filter((carte) => carte?.id === id).length;
-}
-
-function texteBouton(id) {
-  const nombre = dansLeBinder(id);
-  return nombre ? `Ajoutée ×${nombre}` : "Ajouter";
-}
-
-function tuileAjout(carte) {
-  const { set, nomSet, numero } = infosSet(carte);
-  return `<li class="tuile-ajout">
-      ${visuelCarte(carte)}
+function tuileAjout(entree) {
+  const reste = libresRestants(entree);
+  const total = nombreExemplaires(entree);
+  const numero = entree.set?.officiel ? `${entree.numero}/${entree.set.officiel}` : entree.numero;
+  const nomSet = entree.set?.nom ?? "";
+  return `<li class="tuile-ajout${reste ? "" : " epuisee"}">
+      ${visuelCarte({ ...entree, numero })}
       <span class="tuile-texte">
-        <span class="tuile-nom">${echapper(carte.nom)}</span>
-        <span class="avec-illustration" title="${echapper(nomSet)}">${illustration(set?.symbole, "symbole")}<span>${echapper(nomSet)}</span></span>
-        <span class="num">${echapper(numero)}</span>
+        <span class="tuile-nom">${echapper(entree.nom)}</span>
+        <span title="${echapper(nomSet)}">${echapper(nomSet)}</span>
+        <span class="num">${echapper(numero)} · ${reste} sur ${total} à placer</span>
       </span>
-      <button class="bouton bouton-petit${dansLeBinder(carte.id) ? " bouton-secondaire" : ""}" type="button" data-ajouter="${echapper(carte.id)}"
-        aria-label="Ajouter ${echapper(`${carte.nom}, ${nomSet} ${numero}`)} au binder">${texteBouton(carte.id)}</button>
+      <button class="bouton bouton-petit${reste ? "" : " bouton-secondaire"}" type="button" data-ajouter="${echapper(entree.id)}"${reste ? "" : " disabled"}
+        aria-label="${reste ? `Ajouter ${echapper(`${entree.nom}, ${nomSet} ${numero}`)} au binder` : `${echapper(entree.nom)} : tous tes exemplaires sont déjà placés`}">${reste ? "Ajouter" : "Déjà placée"}</button>
     </li>`;
 }
 
@@ -303,17 +302,24 @@ function montrerJusqua(nombre) {
 
 function chercherDansFenetre() {
   clearTimeout(minuterie);
-  const requete = champAjout.value.trim();
   resultatsAjout.innerHTML = "";
   plusAjout.hidden = true;
   montrees = 0;
-  if (!index) return;
-  if (!requete) {
+  if (collection.length === 0) {
     resumeAjout.textContent = "";
+    resultatsAjout.innerHTML = '<li class="aide-resultats">Ta collection est vide. Ajoute d\'abord des cartes depuis la <a href="recherche.html">recherche</a> : seules tes cartes vont dans un binder.</li>';
     return;
   }
-  trouvees = chercherCartes(index, requete);
-  resumeAjout.textContent = trouvees.length ? pluriel(trouvees.length, "résultat") : "Aucune carte trouvée";
+  // Sans texte : toute la collection, les cartes encore à placer d'abord
+  const mots = normaliser(champAjout.value.replace(/\/\s*\d+/, "")).split(" ").filter(Boolean);
+  trouvees = collection
+    .filter((entree) => mots.length === 0 || correspond(entree, mots))
+    .sort((a, b) => (libresRestants(b) > 0) - (libresRestants(a) > 0)
+      || (a.set?.nom ?? "").localeCompare(b.set?.nom ?? "", "fr")
+      || a.numero.localeCompare(b.numero, "fr", { numeric: true }));
+  resumeAjout.textContent = trouvees.length
+    ? `${pluriel(trouvees.length, "carte")} de ta collection`
+    : "Aucune carte de ta collection ne correspond";
   montrerJusqua(PAR_LOT);
 }
 
@@ -324,23 +330,11 @@ async function ouvrirFenetreAjout(position = null) {
     : `Ajouter une carte dans la ${nomPochette(position)}`;
   annonceAjout.textContent = "";
   ajoutees = 0;
+  collection = await getCollection();
   fenetreAjout.showModal();
   champAjout.focus();
   champAjout.select();
-  if (index) {
-    chercherDansFenetre();
-    return;
-  }
-  resumeAjout.textContent = "Chargement de la liste des cartes…";
-  try {
-    index = await getIndex();
-    resumeAjout.textContent = "";
-    chercherDansFenetre();
-  } catch (erreur) {
-    resumeAjout.textContent = erreur instanceof ErreurTcgdex && erreur.raison === "reseau"
-      ? "Impossible de joindre la base de cartes TCGdex. Vérifie ta connexion internet, puis réessaie."
-      : "La base de cartes TCGdex ne répond pas correctement pour le moment. Réessaie dans quelques minutes.";
-  }
+  chercherDansFenetre();
 }
 
 champAjout.addEventListener("input", () => {
@@ -359,12 +353,8 @@ plusAjout.addEventListener("click", () => {
 resultatsAjout.addEventListener("click", async (evenement) => {
   const bouton = evenement.target.closest("button[data-ajouter]");
   if (!bouton) return;
-  const carte = trouvees.find((c) => c.id === bouton.dataset.ajouter);
-  const { nomSet } = infosSet(carte);
-  const resume = {
-    id: carte.id, nom: carte.nom, numero: carte.numero, image: carte.image, imageSecours: carte.imageSecours,
-    set: { id: carte.set, nom: nomSet, officiel: index.sets.get(carte.set)?.officiel ?? null }, langue: "fr",
-  };
+  const entree = trouvees.find((c) => c.id === bouton.dataset.ajouter);
+  const resume = { id: entree.id, nom: entree.nom, numero: entree.numero, image: entree.image, set: entree.set, langue: entree.langue ?? "fr" };
   try {
     const position = await placerCarte(ouvert.id, resume, cibleAjout);
     remplacer((await getBinders()).libres.find((b) => b.id === ouvert.id));
@@ -375,11 +365,15 @@ resultatsAjout.addEventListener("click", async (evenement) => {
       fermerAjout();
       return;
     }
-    bouton.textContent = texteBouton(carte.id);
-    bouton.classList.add("bouton-secondaire");
-    annonceAjout.textContent = `${carte.nom} ajoutée, page ${Math.floor(position / PAR_PAGE) + 1}.`;
+    const tuile = bouton.closest(".tuile-ajout");
+    tuile.outerHTML = tuileAjout(entree);
+    const nouveau = resultatsAjout.querySelector(`[data-ajouter="${CSS.escape(entree.id)}"]`);
+    (nouveau.disabled ? champAjout : nouveau).focus();
+    annonceAjout.textContent = `${entree.nom} ajoutée, ${nomPochette(position)}.`;
   } catch (erreur) {
-    annonceAjout.textContent = "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+    annonceAjout.textContent = erreur instanceof ErreurBinder
+      ? `Tous tes exemplaires de ${entree.nom} sont déjà dans un binder.`
+      : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
   }
 });
 

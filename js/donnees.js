@@ -130,7 +130,22 @@ export function valeurEntree(entree) {
 // ---------- Binders ----------
 // binders : { libres: [{ id, nom, couverture, cartes: [résumé de carte ou null, …], creeLe }] }
 // cartes[i] est la pochette i (9 par page : 0 à 8 sur la page 1…) ; null = pochette vide.
-// Une carte placée dans un binder n'entre pas dans la collection : on peut y mettre n'importe quelle carte.
+// Seules les cartes de la collection vont dans un binder, et pas plus d'exemplaires que ceux possédés
+// (tous binders confondus) : comme un vrai classeur.
+
+// Erreur de placement : raison "non-possedee" (carte absente de la collection) ou "deja-placee"
+// (tous ses exemplaires sont déjà dans des binders).
+export class ErreurBinder extends Error {
+  constructor(raison) {
+    super(`Binder : ${raison}`);
+    this.raison = raison;
+  }
+}
+
+// Nombre de pochettes occupées par une carte, dans tous les binders.
+export function placementsDe(libres, id) {
+  return libres.reduce((somme, binder) => somme + binder.cartes.filter((carte) => carte?.id === id).length, 0);
+}
 
 function lireBinders() {
   const binders = lire("binders", {});
@@ -188,6 +203,9 @@ export function nombreDeCartes(binder) {
 export async function placerCarte(idBinder, carte, position = null) {
   const binders = lireBinders();
   const binder = binderModifiable(binders, idBinder);
+  const entree = lire("collection", {})[carte.id];
+  if (!entree) throw new ErreurBinder("non-possedee");
+  if (placementsDe(binders.libres, carte.id) >= nombreExemplaires(entree)) throw new ErreurBinder("deja-placee");
   let place = position !== null && position >= 0 && !binder.cartes[position] ? position : binder.cartes.indexOf(null);
   if (place < 0) place = binder.cartes.length;
   while (binder.cartes.length < place) binder.cartes.push(null);

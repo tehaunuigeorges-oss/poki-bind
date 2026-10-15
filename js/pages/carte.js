@@ -2,7 +2,8 @@
 // informations, prix Cardmarket de la variante choisie et sa courbe.
 
 import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, getSerie, ErreurTcgdex } from "../tcgdex.js";
-import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte, nombreDeCartes } from "../donnees.js";
+import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte, nombreDeCartes, nombreExemplaires,
+  placementsDe, ErreurBinder } from "../donnees.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
 
@@ -235,6 +236,15 @@ const boutonPlacer = document.getElementById("bouton-placer");
 
 async function ouvrirFenetrePlacer() {
   const { libres } = await getBinders();
+  // Seules les cartes de la collection vont dans un binder, pas plus que les exemplaires possédés
+  if (!entree) {
+    annoncer("Ajoute d'abord cette carte à ta collection : seules tes cartes vont dans un binder.");
+    return;
+  }
+  if (placementsDe(libres, carte.id) >= nombreExemplaires(entree)) {
+    annoncer("Tous tes exemplaires de cette carte sont déjà dans un binder.");
+    return;
+  }
   boutonPlacer.hidden = libres.length === 0;
   choixBinders.innerHTML = libres.length
     ? `<fieldset class="liste-choix"><legend class="sr-only">Binder</legend>${libres.map((binder, rang) => `
@@ -257,7 +267,9 @@ document.getElementById("formulaire-placer").addEventListener("submit", async (e
     annoncer(`${carte.name} est dans « ${nom} », page ${Math.floor(position / 9) + 1}, pochette ${(position % 9) + 1}. Tu peux la déplacer depuis la page Binders.`);
   } catch (erreur) {
     fenetrePlacer.close();
-    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    annoncer(erreur instanceof ErreurBinder
+      ? "Tous tes exemplaires de cette carte sont déjà dans un binder."
+      : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
   }
   document.getElementById("bouton-binder").focus();
 });
