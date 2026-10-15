@@ -1,9 +1,9 @@
 // Fiche d'une carte (carte.html?id=sv08.5-074) : image, variantes avec le nombre d'exemplaires,
 // informations, prix Cardmarket de la variante choisie et sa courbe.
 
-import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, ErreurTcgdex } from "../tcgdex.js";
+import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, getSerie, ErreurTcgdex } from "../tcgdex.js";
 import { getCarteDeCollection, ajouterCarte, retirerCarte } from "../donnees.js";
-import { visuelCarte } from "../visuel-carte.js";
+import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
 
 const zone = document.getElementById("fiche-page");
@@ -163,19 +163,24 @@ function choisir(cle) {
   afficherPrix();
 }
 
-function afficher(set) {
+function afficher(set, serie) {
   const numero = numeroLisible(carte.localId);
   const officiel = carte.set?.cardCount?.official;
   const numeroComplet = officiel ? `${numero}/${officiel}` : numero;
   const nomSet = carte.set?.name ?? "";
-  const surtitre = [set?.serie?.name, nomSet].filter(Boolean).join(" · ");
+  // Série puis set, chacun avec son illustration (logo de la série, symbole du set ou à défaut son logo)
+  const illustrationSet = illustration(set?.symbol ?? carte.set?.symbol, "symbole") || illustration(set?.logo ?? carte.set?.logo);
+  const surtitre = [
+    set?.serie?.name ? `<span class="avec-illustration">${illustration(serie?.logo)}<span>${echapper(set.serie.name)}</span></span>` : "",
+    nomSet ? `<span class="avec-illustration">${illustrationSet}<span>${echapper(nomSet)}</span></span>` : "",
+  ].filter(Boolean).join('<span aria-hidden="true">·</span>');
   const teinte = TYPES.find((type) => type === normaliser(carte.types?.[0])) ?? "";
   document.title = `${carte.name} · ${nomSet} · Pokibind`;
 
   // Venu de la recherche, le lien du haut y ramène ; sinon, il mène au set de la carte.
   const lienRetour = recherchePrecedente
     ? `<a class="retour" id="retour-recherche" href="${echapper(recherchePrecedente)}">← Retour à la recherche</a>`
-    : `<a class="retour" href="set.html?id=${encodeURIComponent(carte.set?.id ?? setDeCarte(carte.id))}">← ${echapper(nomSet || "Voir le set")}</a>`;
+    : `<a class="retour avec-illustration" href="set.html?id=${encodeURIComponent(carte.set?.id ?? setDeCarte(carte.id))}">←${illustrationSet}<span>${echapper(nomSet || "Voir le set")}</span></a>`;
   const imageSecours = carte.image ? null : imageDeSecours(set?.serie?.id, carte.set?.id ?? setDeCarte(carte.id), numero);
 
   zone.removeAttribute("aria-busy");
@@ -189,7 +194,7 @@ function afficher(set) {
       </div>
       <div class="fiche-infos">
         <div class="fiche-titre">
-          <p class="surtitre">${echapper(surtitre)}</p>
+          <p class="surtitre fiche-surtitre">${surtitre}</p>
           <h1>${echapper(carte.name)}</h1>
         </div>
         <section class="fiche-bloc" aria-labelledby="titre-variantes">
@@ -281,7 +286,9 @@ async function charger() {
     variantes = variantesDeCarte(carte);
     const existantes = variantes.filter((v) => v.existe);
     choisie = (existantes.find((v) => entree?.variantes[v.cle]) ?? existantes[0]).cle;
-    afficher(set);
+    // Le logo de la série est dans sa fiche TCGdex (déjà en cache après une recherche)
+    const serie = set?.serie?.id ? await getSerie(set.serie.id).catch(() => null) : null;
+    afficher(set, serie);
   } catch (erreur) {
     if (erreur instanceof ErreurTcgdex && erreur.raison === "introuvable") {
       afficherMessage("Carte introuvable", "Cette carte n'existe pas dans la base de cartes TCGdex.");

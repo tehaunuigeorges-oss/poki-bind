@@ -807,6 +807,21 @@ main.a-propos { gap: 44px; }
 
 .familles { justify-self: start; flex-wrap: wrap; }
 
+/* Logo ou symbole d'un set ou d'une série, à côté de son nom (illustration, dans js/visuel-carte.js).
+   Si l'image ne se charge pas, elle est retirée et le nom reste seul. */
+.avec-illustration { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.illustration { flex: none; object-fit: contain; }
+.illustration-logo { width: auto; max-width: 90px; height: 24px; }
+.illustration-symbole { width: 18px; height: 18px; }
+.tuile-texte .avec-illustration { display: flex; gap: 4px; }
+.tuile-texte .avec-illustration > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tuile-texte .illustration-symbole { width: 14px; height: 14px; }
+.groupe-set-titre .illustration-logo { max-width: 110px; height: 30px; }
+.groupe-set-infos .illustration-logo { max-width: 60px; height: 18px; }
+.fiche-surtitre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.fiche-surtitre .illustration-logo { height: 22px; }
+.retour.avec-illustration .illustration-symbole { width: 16px; height: 16px; }
+
 /* Parcours set par set : une section repliable par set, avec titre et nombre de cartes */
 .parcours { display: grid; gap: 10px; }
 .groupe-set { border: 1px solid var(--line); border-radius: var(--rayon-m); }

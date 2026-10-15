@@ -100,6 +100,15 @@ async function nettoyer(cache) {
 
 export const getCarte = (id) => charger(`cards/${encodeURIComponent(id)}`, JOUR);
 export const getSet = (id) => charger(`sets/${encodeURIComponent(id)}`, SEMAINE);
+export const getSerie = (id) => charger(`series/${encodeURIComponent(id)}`, SEMAINE);
+
+// Logo ou symbole d'un set ou d'une série (adresse TCGdex sans extension).
+// TCGdex donne les symboles sous « /univ/ », qui répond toujours « 400 » : les fichiers
+// sont en réalité sous « /fr/ » (pour une partie des sets seulement).
+export function illustrationTcgdex(base) {
+  if (typeof base !== "string" || !base.startsWith("https://")) return null;
+  return `${base.replace("assets.tcgdex.net/univ/", "assets.tcgdex.net/fr/")}.webp`;
+}
 
 // Le numéro d'une carte ne contient jamais de tiret : « sv08.5-074 » → set « sv08.5 »
 export const setDeCarte = (id) => String(id).slice(0, String(id).lastIndexOf("-"));
@@ -160,8 +169,10 @@ async function construireIndex() {
       sets.set(set.id, {
         id: set.id,
         nom: set.name,
+        logo: set.logo ?? null,
+        symbole: set.symbol ?? null,
         officiel: set.cardCount?.official ?? null,
-        serie: { id: serie.id, nom: serie.name },
+        serie: { id: serie.id, nom: serie.name, logo: serie.logo ?? null },
         rang: (series.length - positionSerie) * 1000 + positionSet,
       });
     });
@@ -190,7 +201,7 @@ async function construireIndex() {
   return {
     cartes,
     sets,
-    series: series.filter((serie) => !SERIES_IGNOREES.has(serie.id)).map((serie) => ({ id: serie.id, nom: serie.name })),
+    series: series.filter((serie) => !SERIES_IGNOREES.has(serie.id)).map((serie) => ({ id: serie.id, nom: serie.name, logo: serie.logo ?? null })),
   };
 }
 
@@ -237,7 +248,7 @@ export function cartesParSet(index, idSerie = "", famille = "") {
     if (idSerie && set?.serie.id !== idSerie) continue;
     if (famille && carte.famille !== famille) continue;
     if (!groupes.has(carte.set)) {
-      groupes.set(carte.set, { id: carte.set, nom: set?.nom ?? carte.set.toUpperCase(), serie: set?.serie ?? null, rang: carte.rang, cartes: [] });
+      groupes.set(carte.set, { id: carte.set, nom: set?.nom ?? carte.set.toUpperCase(), logo: set?.logo ?? null, serie: set?.serie ?? null, rang: carte.rang, cartes: [] });
     }
     groupes.get(carte.set).cartes.push(carte);
   }

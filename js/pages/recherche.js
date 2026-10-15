@@ -4,7 +4,7 @@
 
 import { getIndex, chercherCartes, cartesParSet, FAMILLES, getCarte, variantesDeCarte, resumeCarte, ErreurTcgdex } from "../tcgdex.js";
 import { getCollection, ajouterCarte } from "../donnees.js";
-import { visuelCarte } from "../visuel-carte.js";
+import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, formaterNombre, annoncer } from "../outils.js";
 
 const PAR_PAGE = 60;
@@ -48,6 +48,7 @@ function infosSet(carte) {
   const set = index.sets.get(carte.set);
   return {
     nomSet: set?.nom ?? carte.set.toUpperCase(),
+    symbole: set?.symbole ?? null,
     numero: set?.officiel ? `${carte.numero}/${set.officiel}` : carte.numero,
   };
 }
@@ -56,7 +57,7 @@ const indicateurPossedee = (nom) =>
   `<span class="ajout-rapide possede" role="img" aria-label="${echapper(nom)} est dans ta collection">${ICONE_COCHE}</span>`;
 
 function tuile(carte) {
-  const { nomSet, numero } = infosSet(carte);
+  const { nomSet, symbole, numero } = infosSet(carte);
   const etat = possedees.has(carte.id)
     ? indicateurPossedee(carte.nom)
     : `<button class="ajout-rapide" type="button" data-id="${echapper(carte.id)}" aria-label="Ajouter ${echapper(`${carte.nom}, ${nomSet} ${numero}`)} à ma collection">${ICONE_PLUS}</button>`;
@@ -65,7 +66,7 @@ function tuile(carte) {
         ${visuelCarte(carte)}
         <span class="tuile-texte">
           <span class="tuile-nom">${echapper(carte.nom)}</span>
-          <span title="${echapper(nomSet)}">${echapper(nomSet)}</span>
+          <span class="avec-illustration" title="${echapper(nomSet)}">${illustration(symbole, "symbole")}<span>${echapper(nomSet)}</span></span>
           <span class="num">${echapper(numero)}</span>
         </span>
       </a>
@@ -146,8 +147,8 @@ function afficherParcours() {
   parcours.innerHTML = groupes.map((groupe) => `
     <details class="groupe-set" data-set="${echapper(groupe.id)}">
       <summary>
-        <h2 class="groupe-set-titre">${echapper(groupe.nom)}</h2>
-        <span class="groupe-set-infos">${echapper([groupe.serie?.nom, pluriel(groupe.cartes.length, "carte")].filter(Boolean).join(" · "))}</span>
+        <h2 class="groupe-set-titre avec-illustration">${illustration(groupe.logo)}<span>${echapper(groupe.nom)}</span></h2>
+        <span class="groupe-set-infos avec-illustration">${groupe.serie ? `${illustration(groupe.serie.logo)}<span>${echapper(groupe.serie.nom)}</span><span aria-hidden="true">·</span>` : ""}<span>${pluriel(groupe.cartes.length, "carte")}</span></span>
       </summary>
       <ul class="grille-cartes"></ul>
     </details>`).join("");

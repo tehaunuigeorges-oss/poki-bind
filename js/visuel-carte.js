@@ -2,7 +2,15 @@
 // numéro) quand l'image n'existe pas ou ne se charge pas. Pendant le chargement, le cadre clignote doucement.
 
 import { echapper } from "./outils.js";
-import { imageCarte } from "./tcgdex.js";
+import { imageCarte, illustrationTcgdex } from "./tcgdex.js";
+
+// Petite illustration d'un set ou d'une série, posée à côté de son nom (le nom suffit à la décrire :
+// texte alternatif vide). genre : "logo" (large) ou "symbole" (carré). Sans image, rien n'est
+// affiché ; si l'image ne se charge pas, elle disparaît et il reste le texte.
+export function illustration(base, genre = "logo") {
+  const adresse = illustrationTcgdex(base);
+  return adresse ? `<img class="illustration illustration-${genre}" src="${echapper(adresse)}" alt="" loading="lazy" decoding="async">` : "";
+}
 
 const TAILLES = { low: [245, 337], high: [600, 825] };
 
@@ -36,6 +44,10 @@ document.addEventListener("load", (evenement) => {
 }, true);
 document.addEventListener("error", (evenement) => {
   const image = evenement.target;
+  if (image.matches?.("img.illustration")) {
+    image.remove();
+    return;
+  }
   if (!image.matches?.(".visuel-carte img")) return;
   const visuel = image.parentElement;
   visuel.classList.add("sans-image");
