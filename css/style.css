@@ -1446,3 +1446,148 @@ body.dark .pochette-ajout:hover, body.dark .pochette-ajout:focus-visible { backg
 .tuile-ajout.epuisee .visuel-carte { filter: grayscale(1) opacity(.5); }
 .grille-ajout .aide-resultats { grid-column: 1 / -1; }
 .grille-ajout .aide-resultats a { color: var(--ink); text-underline-offset: 3px; }
+
+
+/* ---------- 19. Statistiques (statistiques.html) ---------- */
+
+/* Couleurs des deux séries (cartes, scellé), vérifiées pour les daltoniens dans chaque mode */
+:root { --serie-cartes: #4A7FB5; --serie-scelle: #C35222; }
+body.dark { --serie-cartes: #5A8FD0; --serie-scelle: #D46A3C; }
+
+.maj-prix { font-size: 13px; }
+.maj-prix:empty { display: none; }
+.stats { display: grid; gap: 20px; }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+}
+.kpi { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 16px 18px; }
+.kpi:nth-child(odd) { border-right: 1px solid var(--line); }
+.kpi:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
+@media (min-width: 860px) {
+  .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .kpi { border: 0 !important; }
+  .kpi + .kpi { border-left: 1px solid var(--line) !important; }
+}
+.kpi-detail { font-size: 13px; color: var(--muted); }
+.kpi-detail.hausse { color: var(--good); }
+.kpi-detail.baisse { color: var(--down); }
+.avec-pastille { display: inline-flex; align-items: center; gap: 6px; }
+.pastille { flex: none; width: 10px; height: 10px; border-radius: 3px; }
+.pastille.serie-cartes { background: var(--serie-cartes); }
+.pastille.serie-scelle { background: var(--serie-scelle); }
+
+.panneau {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+}
+.panneau h2 { font-size: 18px; }
+.panneau-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.panneaux { display: grid; gap: 20px; }
+@media (min-width: 860px) {
+  .panneaux { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Répartition cartes / scellé : barre et légende */
+.repartition { display: grid; gap: 8px; }
+.barre-repartition { display: flex; gap: 2px; height: 10px; }
+.barre-repartition span { min-width: 4px; border-radius: 4px; }
+.barre-repartition .serie-cartes { background: var(--serie-cartes); }
+.barre-repartition .serie-scelle { background: var(--serie-scelle); }
+.legende { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legende-total { margin-left: auto; color: var(--ink); }
+
+/* Courbe de la valeur */
+.graphique { position: relative; min-width: 0; }
+.courbe-valeur { display: block; max-width: none; overflow: visible; }
+.axe-grille { stroke: var(--line); }
+.axe-texte, .etiquette-serie { fill: var(--muted); font-size: 11px; font-family: var(--font-texte); }
+.etiquette-serie { fill: var(--ink); font-weight: 500; }
+.aire-cartes { fill: color-mix(in srgb, var(--serie-cartes) 22%, transparent); }
+.aire-scelle { fill: color-mix(in srgb, var(--serie-scelle) 22%, transparent); }
+.trait-cartes, .trait-scelle { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.trait-cartes { stroke: var(--serie-cartes); }
+.trait-scelle { stroke: var(--serie-scelle); }
+.repere-ligne { stroke: var(--muted); stroke-dasharray: 3 3; }
+.repere-point { stroke: var(--bg); stroke-width: 2; }
+.repere-point.serie-cartes { fill: var(--serie-cartes); }
+.repere-point.serie-scelle { fill: var(--serie-scelle); }
+.zone-survol { fill: transparent; cursor: crosshair; }
+.zone-survol:focus-visible { outline: 2px solid var(--focus); }
+.info-bulle {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-s);
+  background: var(--bg);
+  box-shadow: 0 4px 14px rgb(0 0 0 / .12);
+  font-size: 13px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.courbe-attente { display: grid; gap: 6px; padding: 18px; border-radius: var(--rayon-m); background: var(--surface); font-size: 14px; }
+.courbe-attente p:not(:first-child) { color: var(--muted); }
+.valeurs-detail { margin-top: 10px; font-size: 13px; }
+.valeurs-detail summary { cursor: pointer; color: var(--muted); }
+
+/* Barres horizontales (sets, types, raretés) */
+.barres { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.barres li { display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr) 3em; align-items: center; gap: 12px; font-size: 13px; }
+.barre-nom { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.barre-nom span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.barre-nom img { flex: none; width: 18px; height: 18px; }
+.barre { height: 8px; }
+.barre span { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--ink); }
+.barre-valeur { text-align: right; color: var(--muted); }
+.barres .aide-resultats { display: block; }
+
+/* Sets complétés */
+.liste-complets { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.liste-complets li { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+.liste-complets a { display: flex; align-items: center; gap: 12px; min-width: 0; color: inherit; text-decoration: none; }
+.liste-complets a:hover .complet-nom { text-decoration: underline; text-underline-offset: 3px; }
+.liste-complets li > .num { flex: none; font-size: 12px; color: var(--muted); }
+.liste-complets .le-plus-proche { padding-top: 10px; border-top: 1px dashed var(--line); }
+.complet-nom { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vignette-set.petite { width: 36px; height: 36px; padding: 3px; border-radius: 9px; }
+.vignette-set.petite:empty::after { font-size: 10px; }
+
+/* Tableaux */
+.tableau-defilant { overflow-x: auto; }
+.tableau { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tableau th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tableau td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tableau .nombre { text-align: right; white-space: nowrap; }
+.tableau .secondaire { color: var(--muted); }
+.tableau a { color: inherit; text-underline-offset: 3px; }
+.tableau small { color: var(--muted); }
+.tableau .hausse { color: var(--good); }
+.tableau .baisse { color: var(--down); }
+.mini-carte { display: block; width: 40px; height: 55px; border-radius: 3px; background: var(--surface); object-fit: contain; }
+@media (max-width: 599px) {
+  #cartes-cheres th:nth-child(1), #cartes-cheres td:nth-child(1),
+  #cartes-cheres th:nth-child(3), #cartes-cheres td:nth-child(3) { display: none; }
+  .tableau th, .tableau td { padding-inline: 6px; }
+  .tableau th { letter-spacing: .04em; }
+}

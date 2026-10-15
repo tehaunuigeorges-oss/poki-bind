@@ -321,8 +321,11 @@ export function variantesDeCarte(carte) {
 // avec le dernier prix connu de chaque variante.
 export function resumeCarte(carte) {
   const prix = {};
+  const prix30 = {};
   for (const variante of variantesDeCarte(carte)) {
-    if (variante.existe && variante.prix) prix[variante.cle] = variante.prix.tendance;
+    if (!variante.existe || !variante.prix) continue;
+    prix[variante.cle] = variante.prix.tendance;
+    if (variante.prix.moyenne30) prix30[variante.cle] = variante.prix.moyenne30;
   }
   return {
     id: carte.id,
@@ -331,7 +334,11 @@ export function resumeCarte(carte) {
     image: carte.image ?? null,
     set: { id: carte.set?.id ?? setDeCarte(carte.id), nom: carte.set?.name ?? "", officiel: carte.set?.cardCount?.official ?? null },
     langue: LANGUE,
+    categorie: carte.category ?? "",
+    types: Array.isArray(carte.types) ? carte.types : [],
+    rarete: carte.rarity ?? "",
     prix,
+    prix30,
     prixLe: new Date().toISOString(),
   };
 }

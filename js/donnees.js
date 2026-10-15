@@ -100,6 +100,16 @@ export async function retirerCarte(id, variante, nombre = 1) {
   return modifierExemplaires(id, variante, -nombre);
 }
 
+// Remet à jour les informations et les prix d'une carte de la collection, sans toucher à ses exemplaires.
+export async function majCarte(resume) {
+  const collection = lire("collection", {});
+  const entree = collection[resume.id];
+  if (!entree) return null;
+  Object.assign(entree, resume, { variantes: entree.variantes, ajouteeLe: entree.ajouteeLe });
+  ecrire("collection", collection);
+  return entree;
+}
+
 function modifierExemplaires(id, variante, difference, resume = null) {
   const collection = lire("collection", {});
   const entree = collection[id] ?? (resume && { variantes: {}, ajouteeLe: new Date().toISOString() });
@@ -238,4 +248,37 @@ export async function retirerDuBinder(idBinder, position) {
 // Couvertures illustrées débloquées dans la boutique (aucune tant qu'elle n'est pas ouverte).
 export async function getCouverturesDebloquees() {
   return lire("couvertures", []);
+}
+
+// ---------- Scellé (étape 9) ----------
+// [{ id, nom, quantite, achat, revente }] : prix d'achat et revente estimée, saisis par l'utilisateur.
+
+export async function getScelle() {
+  const scelle = lire("scelle", []);
+  return Array.isArray(scelle) ? scelle : [];
+}
+
+export function valeurScelle(produits) {
+  return produits.reduce((somme, produit) => somme + (Number(produit.quantite) || 0) * (Number(produit.revente) || 0), 0);
+}
+
+// ---------- Historique de la valeur ----------
+// Un relevé par jour : [{ date: "2026-10-15", cartes, scelle }], du plus ancien au plus récent.
+// TCGdex ne donne pas d'historique : la courbe se construit au fil des visites.
+
+const JOURS_GARDES = 400;
+
+export async function getHistorique() {
+  const historique = lire("historique", []);
+  return Array.isArray(historique) ? historique : [];
+}
+
+export async function enregistrerValeur({ cartes, scelle }) {
+  const maintenant = new Date();
+  const date = `${maintenant.getFullYear()}-${String(maintenant.getMonth() + 1).padStart(2, "0")}-${String(maintenant.getDate()).padStart(2, "0")}`;
+  const historique = (await getHistorique()).filter((releve) => releve.date !== date);
+  historique.push({ date, cartes: Math.round(cartes * 100) / 100, scelle: Math.round(scelle * 100) / 100 });
+  historique.sort((a, b) => a.date.localeCompare(b.date));
+  ecrire("historique", historique.slice(-JOURS_GARDES));
+  return historique;
 }
