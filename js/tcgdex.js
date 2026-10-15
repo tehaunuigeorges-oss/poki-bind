@@ -14,6 +14,11 @@ const SEMAINE = 7 * JOUR;
 // Pokémon TCG Pocket n'existe qu'en jeu vidéo : ses cartes ne se collectionnent pas.
 const SERIES_IGNOREES = new Set(["tcgp"]);
 
+// Les trois grandes familles de cartes (« category » dans TCGdex). À elles trois, elles contiennent
+// toutes les cartes : on télécharge leurs listes au lieu de la liste complète, pour le même poids.
+export const FAMILLES = ["Pokémon", "Dresseur", "Énergie"];
+const cheminFamille = (famille) => `cards?category=${encodeURIComponent(famille)}`;
+
 // Erreur avec sa raison : "reseau" (TCGdex injoignable), "introuvable" (404) ou "serveur".
 export class ErreurTcgdex extends Error {
   constructor(raison) {
@@ -73,8 +78,8 @@ async function charger(chemin, duree) {
       headers: { "Content-Type": "application/json", "x-pokibind-date": String(Date.now()) },
     });
     cache.put(adresse, aGarder).catch(() => {});
-    // La liste complète se télécharge une fois par semaine : on en profite pour effacer les vieilles réponses.
-    if (chemin === "cards") nettoyer(cache);
+    // Les listes de cartes se téléchargent une fois par semaine : on en profite pour effacer les vieilles réponses.
+    if (chemin === cheminFamille(FAMILLES[0])) nettoyer(cache);
   }
   return donnees;
 }
@@ -137,7 +142,11 @@ export function getIndex() {
 }
 
 async function construireIndex() {
-  const [liste, resumesSeries] = await Promise.all([charger("cards", SEMAINE), charger("series", SEMAINE)]);
+  const [resumesSeries, ...listes] = await Promise.all([
+    charger("series", SEMAINE),
+    ...FAMILLES.map((famille) => charger(cheminFamille(famille), SEMAINE)),
+  ]);
+  const liste = listes.flatMap((cartesFamille, rang) => cartesFamille.map((carte) => ({ ...carte, famille: FAMILLES[rang] })));
   // Une série introuvable n'empêche pas la recherche : ses cartes restent, sans nom de set.
   const series = (await Promise.all(
     resumesSeries.map((serie) => charger(`series/${encodeURIComponent(serie.id)}`, SEMAINE).catch(() => null))
@@ -174,6 +183,7 @@ async function construireIndex() {
       cle: normaliser(carte.name),
       cleNumero: cleNumero(carte.localId),
       rang: set?.rang ?? 0,
+      famille: carte.famille,
     });
   }
 
@@ -187,7 +197,7 @@ async function construireIndex() {
 // Cherche par nom (sans tenir compte des accents) et/ou par numéro (« 74 », « 074/131 », « TG01 »).
 // Chaque mot doit se trouver dans le nom ou être le numéro de la carte.
 // Résultats : noms exacts d'abord, puis noms qui commencent par la recherche, puis les sets les plus récents.
-export function chercherCartes(index, texte, idSerie = "") {
+export function chercherCartes(index, texte, idSerie = "", famille = "") {
   let total = null;
   const sansTotal = String(texte ?? "").replace(/([a-z]*\d+[a-z]?)\s*\/\s*(\d+)/i, (tout, numero, sur) => {
     total = Number(sur);
@@ -202,6 +212,7 @@ export function chercherCartes(index, texte, idSerie = "") {
   for (const carte of index.cartes) {
     const set = index.sets.get(carte.set);
     if (idSerie && set?.serie.id !== idSerie) continue;
+    if (famille && carte.famille !== famille) continue;
     if (total !== null && set?.officiel != null && set.officiel !== total) continue;
     const correspond = mots.every((mot, i) => carte.cle.includes(mot) || carte.cleNumero === numeros[i]);
     if (!correspond) continue;
@@ -215,6 +226,24 @@ export function chercherCartes(index, texte, idSerie = "") {
     a.carte.numero.localeCompare(b.carte.numero, "fr", { numeric: true })
   );
   return trouvees.map(({ carte }) => carte);
+}
+
+// Cartes d'une famille et/ou d'une série, rangées par set : sets du plus récent au plus ancien,
+// cartes par numéro. Une carte dont le set est inconnu de TCGdex garde un groupe à son nom de code.
+export function cartesParSet(index, idSerie = "", famille = "") {
+  const groupes = new Map();
+  for (const carte of index.cartes) {
+    const set = index.sets.get(carte.set);
+    if (idSerie && set?.serie.id !== idSerie) continue;
+    if (famille && carte.famille !== famille) continue;
+    if (!groupes.has(carte.set)) {
+      groupes.set(carte.set, { id: carte.set, nom: set?.nom ?? carte.set.toUpperCase(), serie: set?.serie ?? null, rang: carte.rang, cartes: [] });
+    }
+    groupes.get(carte.set).cartes.push(carte);
+  }
+  const liste = [...groupes.values()].sort((a, b) => b.rang - a.rang || a.nom.localeCompare(b.nom, "fr"));
+  for (const groupe of liste) groupe.cartes.sort((a, b) => a.numero.localeCompare(b.numero, "fr", { numeric: true }));
+  return liste;
 }
 
 // ---------- Variantes et prix ----------

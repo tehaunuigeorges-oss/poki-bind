@@ -26,7 +26,7 @@
   <main class="wrap" id="contenu">
     <div class="tete-page">
       <h1>Rechercher une carte</h1>
-      <p>Tape un nom ou un numéro, puis ajoute la carte en un clic.</p>
+      <p>Tape un nom ou un numéro, ou parcours les cartes set par set. Ajoute une carte en un clic.</p>
     </div>
 
     <form class="recherche" id="formulaire-recherche" role="search" novalidate>
@@ -43,6 +43,13 @@
       <button class="bouton" type="submit">Rechercher</button>
     </form>
 
+    <div class="segments familles" id="familles" role="group" aria-label="Famille de cartes">
+      <button type="button" data-famille="" aria-pressed="true">Toutes</button>
+      <button type="button" data-famille="Pokémon" aria-pressed="false">Pokémon</button>
+      <button type="button" data-famille="Dresseur" aria-pressed="false">Dresseur</button>
+      <button type="button" data-famille="Énergie" aria-pressed="false">Énergie</button>
+    </div>
+
     <section class="resultats" aria-labelledby="resume-resultats">
       <p class="surtitre num" id="resume-resultats" role="status"></p>
       <div class="encart encart-erreur" id="erreur-recherche" role="alert" hidden>
@@ -51,6 +58,7 @@
       </div>
       <p class="aide-resultats" id="aucun-resultat" hidden>Vérifie l'orthographe, choisis « Toutes les séries » ou essaie le numéro de la carte, par exemple 074/131.</p>
       <ul class="grille-cartes" id="resultats"></ul>
+      <div class="parcours" id="parcours"></div>
       <button class="bouton bouton-secondaire" id="voir-plus" type="button" hidden>Voir plus de cartes</button>
     </section>
     <p class="annonce" id="annonce" role="status"></p>

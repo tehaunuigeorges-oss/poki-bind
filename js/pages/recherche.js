@@ -1,7 +1,8 @@
-// Recherche de cartes. La liste complète des cartes françaises est téléchargée une fois par semaine
+// Recherche de cartes. Les listes des cartes françaises sont téléchargées une fois par semaine
 // (voir tcgdex.js), puis la recherche se fait dans le navigateur, sans tenir compte des accents.
+// Sans texte cherché, la page sert à parcourir les cartes par famille et par série, set par set.
 
-import { getIndex, chercherCartes, getCarte, variantesDeCarte, resumeCarte, ErreurTcgdex } from "../tcgdex.js";
+import { getIndex, chercherCartes, cartesParSet, FAMILLES, getCarte, variantesDeCarte, resumeCarte, ErreurTcgdex } from "../tcgdex.js";
 import { getCollection, ajouterCarte } from "../donnees.js";
 import { visuelCarte } from "../visuel-carte.js";
 import { echapper, formaterNombre, annoncer } from "../outils.js";
@@ -18,10 +19,13 @@ const grille = document.getElementById("resultats");
 const boutonPlus = document.getElementById("voir-plus");
 const encartErreur = document.getElementById("erreur-recherche");
 const texteErreur = document.getElementById("texte-erreur");
+const boutonsFamille = [...document.querySelectorAll("#familles [data-famille]")];
+const parcours = document.getElementById("parcours");
 
 const parametres = new URLSearchParams(location.search);
 const serieDemandee = parametres.get("serie") ?? "";
 champ.value = parametres.get("q") ?? "";
+let famille = FAMILLES.includes(parametres.get("famille")) ? parametres.get("famille") : "";
 
 let index = null;
 let resultats = [];
@@ -69,10 +73,16 @@ function tuile(carte) {
     </li>`;
 }
 
-function texteResume(nombre) {
+// Un nombre suivi de la famille et de la série choisies (« 12 résultats · Pokémon · Écarlate et Violet »)
+function avecFiltres(texte) {
   const serie = index.series.find((s) => s.id === choixSerie.value);
-  const quantite = nombre === 0 ? "Aucune carte trouvée" : `${formaterNombre(nombre)} ${nombre > 1 ? "résultats" : "résultat"}`;
-  return serie ? `${quantite} · ${serie.nom}` : quantite;
+  return [texte, famille, serie?.nom].filter(Boolean).join(" · ");
+}
+
+const pluriel = (nombre, mot) => `${formaterNombre(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;
+
+function texteResume(nombre) {
+  return avecFiltres(nombre === 0 ? "Aucune carte trouvée" : pluriel(nombre, "résultat"));
 }
 
 function majBoutonPlus() {
@@ -88,6 +98,7 @@ function memoriserDansAdresse(requete) {
   const serie = index ? choixSerie.value : serieDemandee;
   if (requete) reglages.set("q", requete);
   if (serie) reglages.set("serie", serie);
+  if (famille) reglages.set("famille", famille);
   const texte = reglages.toString();
   history.replaceState(null, "", texte ? `?${texte}` : location.pathname);
 }
@@ -99,26 +110,60 @@ function afficherResultats() {
   aucunResultat.hidden = true;
   boutonPlus.hidden = true;
 
-  if (!requete) {
-    resultats = [];
-    resume.textContent = "";
-    grille.innerHTML = "";
-    return;
-  }
+  resultats = [];
+  grille.innerHTML = "";
+  parcours.innerHTML = "";
+
   if (!index) {
     if (!encartErreur.hidden) return;
     resume.textContent = "Chargement de la liste des cartes…";
     grille.innerHTML = SQUELETTES;
     return;
   }
+  if (!requete) {
+    afficherParcours();
+    return;
+  }
 
-  resultats = chercherCartes(index, requete, choixSerie.value);
+  resultats = chercherCartes(index, requete, choixSerie.value, famille);
   affichees = Math.min(PAR_PAGE, resultats.length);
   resume.textContent = texteResume(resultats.length);
   aucunResultat.hidden = resultats.length > 0;
   grille.innerHTML = resultats.slice(0, affichees).map(tuile).join("");
   majBoutonPlus();
 }
+
+// ---------- Parcours set par set (rien n'est cherché) ----------
+// Chaque set est une section repliable, avec son titre et son nombre de cartes ;
+// ses cartes ne sont créées qu'à l'ouverture, pour garder la page légère.
+
+let groupes = [];
+
+function afficherParcours() {
+  groupes = cartesParSet(index, choixSerie.value, famille);
+  const total = groupes.reduce((somme, groupe) => somme + groupe.cartes.length, 0);
+  resume.textContent = avecFiltres(`${pluriel(groupes.length, "set")}, ${pluriel(total, "carte")}`);
+  parcours.innerHTML = groupes.map((groupe) => `
+    <details class="groupe-set" data-set="${echapper(groupe.id)}">
+      <summary>
+        <h2 class="groupe-set-titre">${echapper(groupe.nom)}</h2>
+        <span class="groupe-set-infos">${echapper([groupe.serie?.nom, pluriel(groupe.cartes.length, "carte")].filter(Boolean).join(" · "))}</span>
+      </summary>
+      <ul class="grille-cartes"></ul>
+    </details>`).join("");
+}
+
+function remplirSet(details) {
+  const grilleSet = details.querySelector(".grille-cartes");
+  if (grilleSet.childElementCount) return;
+  const groupe = groupes.find((g) => g.id === details.dataset.set);
+  grilleSet.innerHTML = groupe ? groupe.cartes.map(tuile).join("") : "";
+}
+
+// L'événement toggle ne remonte pas : on l'écoute en phase de capture.
+parcours.addEventListener("toggle", (evenement) => {
+  if (evenement.target.open) remplirSet(evenement.target);
+}, true);
 
 // Affiche les résultats suivants jusqu'au nombre demandé ; renvoie la place de la première carte ajoutée.
 function afficherJusqua(nombre) {
@@ -143,7 +188,8 @@ history.scrollRestoration = "manual";
 
 addEventListener("pagehide", () => {
   try {
-    sessionStorage.setItem(CLE_POSITION, JSON.stringify({ adresse: location.search, affichees, hauteur: scrollY }));
+    const ouverts = [...parcours.querySelectorAll("details[open]")].map((details) => details.dataset.set);
+    sessionStorage.setItem(CLE_POSITION, JSON.stringify({ adresse: location.search, affichees, ouverts, hauteur: scrollY }));
   } catch (erreur) {
     // Stockage bloqué : on reviendra simplement en haut de la liste.
   }
@@ -155,6 +201,12 @@ function replacerLaPage() {
     sessionStorage.removeItem(CLE_POSITION);
     if (!position || position.adresse !== location.search) return;
     if (position.affichees > affichees) afficherJusqua(position.affichees);
+    for (const details of parcours.querySelectorAll("details")) {
+      if (position.ouverts?.includes(details.dataset.set)) {
+        remplirSet(details);
+        details.open = true;
+      }
+    }
     scrollTo(0, position.hauteur);
   } catch (erreur) {
     // Position illisible : on reste en haut de la page.
@@ -168,6 +220,18 @@ champ.addEventListener("input", () => {
   minuterie = setTimeout(afficherResultats, DELAI_FRAPPE);
 });
 choixSerie.addEventListener("change", afficherResultats);
+
+function choisirFamille(nouvelle) {
+  famille = nouvelle;
+  for (const bouton of boutonsFamille) bouton.setAttribute("aria-pressed", String(bouton.dataset.famille === famille));
+}
+for (const bouton of boutonsFamille) {
+  bouton.addEventListener("click", () => {
+    choisirFamille(bouton.dataset.famille);
+    afficherResultats();
+  });
+}
+choisirFamille(famille);
 formulaire.addEventListener("submit", (evenement) => {
   evenement.preventDefault();
   afficherResultats();
@@ -177,7 +241,7 @@ formulaire.addEventListener("submit", (evenement) => {
 
 // ---------- Ajout rapide : la variante la plus courante (normale, sinon reverse, sinon holo…) ----------
 
-grille.addEventListener("click", async (evenement) => {
+async function ajoutRapide(evenement) {
   const bouton = evenement.target.closest("button.ajout-rapide");
   if (!bouton || bouton.getAttribute("aria-disabled") === "true") return;
   const id = bouton.dataset.id;
@@ -200,9 +264,26 @@ grille.addEventListener("click", async (evenement) => {
       ? "Impossible d'ajouter la carte : la base de cartes ne répond pas. Réessaie dans un instant."
       : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
   }
-});
+}
+grille.addEventListener("click", ajoutRapide);
+parcours.addEventListener("click", ajoutRapide);
 
 // ---------- Chargement de la liste des cartes ----------
+
+// Journal dans la console (touche F12) : familles et sets trouvés dans les données TCGdex.
+function journaliser() {
+  console.groupCollapsed(`Pokibind · ${pluriel(index.cartes.length, "carte")}, ${pluriel(index.sets.size, "set")}, ${pluriel(index.series.length, "série")}`);
+  for (const nom of FAMILLES) {
+    const sets = cartesParSet(index, "", nom);
+    const total = sets.reduce((somme, groupe) => somme + groupe.cartes.length, 0);
+    console.groupCollapsed(`${nom} : ${pluriel(total, "carte")} dans ${pluriel(sets.length, "set")}`);
+    console.table(sets.map((groupe) => ({ set: groupe.nom, id: groupe.id, serie: groupe.serie?.nom ?? "inconnue", cartes: groupe.cartes.length })));
+    console.groupEnd();
+  }
+  const inconnus = [...new Set(index.cartes.filter((carte) => !index.sets.has(carte.set)).map((carte) => carte.set))];
+  console.info(inconnus.length ? `Sets absents de la liste des séries : ${inconnus.join(", ")}` : "Tous les sets des cartes sont connus.");
+  console.groupEnd();
+}
 
 function messageErreur(erreur) {
   if (erreur instanceof ErreurTcgdex && erreur.raison === "reseau") {
@@ -226,6 +307,7 @@ async function chargerIndex() {
   choixSerie.insertAdjacentHTML("beforeend",
     index.series.map((serie) => `<option value="${echapper(serie.id)}">${echapper(serie.nom)}</option>`).join(""));
   if (index.series.some((serie) => serie.id === serieDemandee)) choixSerie.value = serieDemandee;
+  journaliser();
   afficherResultats();
   replacerLaPage();
 }
