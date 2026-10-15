@@ -1213,7 +1213,7 @@ select.champ.champ-petit { padding-right: 40px; }
 }
 .binder-nouveau:hover { border-color: var(--muted); color: var(--ink); }
 
-/* Couverture : couleur de base (dégradé, logo du set au-dessus du logo Pokibind en blanc) ou illustration */
+/* Couverture : couleur de base (dégradé et logo Pokibind en blanc) ou illustration */
 .couverture {
   position: relative;
   display: grid;
@@ -1227,18 +1227,8 @@ select.champ.champ-petit { padding-right: 40px; }
   box-shadow: inset 6px 0 0 rgb(0 0 0 / .2), 0 6px 16px rgb(20 22 30 / .18);
   container-type: inline-size;
 }
-.couverture-set {
-  display: grid;
-  place-items: center;
-  width: 78cqi;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: rgb(255 255 255 / .88);
-}
-.couverture-set:empty { display: none; }
-.couverture-set .illustration-logo { width: 100%; max-width: none; height: auto; max-height: 64px; }
 /* logo-icone.png est sombre sur fond blanc : inversé puis « screen », il devient blanc sans fond */
-.couverture-pokibind { width: 30cqi; height: auto; filter: brightness(1.04) invert(1); mix-blend-mode: screen; }
+.couverture-pokibind { width: 34cqi; height: auto; filter: brightness(1.04) invert(1); mix-blend-mode: screen; }
 .couverture.illustree { display: block; }
 .couverture.illustree img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -1258,9 +1248,8 @@ select.champ.champ-petit { padding-right: 40px; }
 .binder-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .binder-tete h2:focus { outline: none; }
 .binder-tete p { font-size: 13px; color: var(--muted); }
-.binder-commandes { display: flex; align-items: center; gap: 8px; }
+.binder-commandes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .bouton-icone:disabled { opacity: .4; cursor: default; }
-.binder-ouvert .note-page a { color: var(--ink); text-underline-offset: 3px; }
 
 .double-page {
   display: grid;
@@ -1311,8 +1300,6 @@ body.dark .double-page { background: #07080B; }
 body.dark .pochette { background: rgb(255 255 255 / .1); }
 .pochette-lien { display: block; height: 100%; border-radius: 4px; }
 .pochette .visuel-carte { height: 100%; }
-.pochette.manquante .visuel-carte { filter: grayscale(1) opacity(.45); }
-.pochette.manquante .pochette-lien:hover .visuel-carte { filter: grayscale(.3) opacity(.85); }
 
 /* « × » pour retirer une carte d'un binder libre : au survol, au clavier, toujours sur écran tactile */
 .retirer-carte {
@@ -1365,3 +1352,34 @@ body.dark .pochette { background: rgb(255 255 255 / .1); }
   color: #FFF;
 }
 .cadenas svg { width: 22px; height: 22px; }
+
+/* Fenêtre « Ajouter des cartes » : recherche et résultats, sans quitter le binder */
+.fenetre-large { width: min(760px, 100% - 32px); height: min(760px, 90vh); }
+.fenetre-large[open] { display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 14px; }
+.fenetre-tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fenetre-tete .bouton-icone { font-size: 20px; line-height: 1; }
+.grille-ajout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  align-content: start;
+  gap: 18px 12px;
+  min-height: 0;
+  margin: 0;
+  padding: 2px;
+  overflow: auto;
+  list-style: none;
+}
+.tuile-ajout { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.tuile-ajout .tuile-texte { padding-right: 0; }
+.tuile-ajout .bouton { justify-self: stretch; }
+#plus-ajout { justify-self: center; }
+.fenetre-pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.fenetre-pied .champ-aide { font-size: 13px; }

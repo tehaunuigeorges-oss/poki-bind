@@ -27,27 +27,12 @@
     <div class="tete-page tete-avec-action">
       <div class="tete-page">
         <h1>Mes binders</h1>
-        <p>Tes vitrines pour exposer tes plus belles cartes.</p>
+        <p>Tes vitrines pour exposer tes plus belles cartes : tes préférées, un Pokémon, un illustrateur… à toi de choisir.</p>
       </div>
       <button class="bouton" id="bouton-nouveau" type="button"><span aria-hidden="true">+</span> Nouveau binder</button>
     </div>
 
-    <section class="section" id="rayon-libres" aria-labelledby="titre-libres">
-      <div class="tete-page">
-        <h2 id="titre-libres">Binders libres</h2>
-        <p>Range-y ce que tu veux : tes cartes préférées, un Pokémon, un illustrateur…</p>
-      </div>
-      <ul class="etagere" id="etagere-libres"></ul>
-    </section>
-
-    <section class="section" id="rayon-sets" aria-labelledby="titre-sets">
-      <div class="tete-page">
-        <h2 id="titre-sets">Binders de set</h2>
-        <p>Un binder par set de ta collection, rangé par numéro, pour compléter tes sets.</p>
-      </div>
-      <ul class="etagere" id="etagere-sets" aria-busy="true"></ul>
-      <p class="aide-resultats" id="aucun-set" hidden>Ajoute une carte à ta collection : le binder de son set apparaîtra ici.</p>
-    </section>
+    <ul class="etagere" id="etagere" aria-label="Mes binders"></ul>
 
     <section class="binder-ouvert" id="binder-ouvert" aria-labelledby="titre-binder" hidden></section>
 
@@ -70,6 +55,24 @@
         </div>
         <button class="lien lien-danger" type="button" id="bouton-supprimer" hidden>Supprimer ce binder</button>
       </form>
+    </dialog>
+
+    <dialog class="fenetre fenetre-large" id="fenetre-ajout" aria-labelledby="titre-ajout">
+      <div class="fenetre-tete">
+        <h2 id="titre-ajout">Ajouter des cartes</h2>
+        <button class="bouton-icone" type="button" id="fermer-ajout" aria-label="Fermer">×</button>
+      </div>
+      <form class="recherche-ajout" id="formulaire-ajout" role="search" novalidate>
+        <label class="sr-only" for="requete-ajout">Nom ou numéro de la carte</label>
+        <input class="champ" id="requete-ajout" type="search" placeholder="Ex. Évoli ou 074/131" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      </form>
+      <p class="surtitre num" id="resume-ajout" role="status"></p>
+      <ul class="grille-ajout" id="resultats-ajout"></ul>
+      <button class="bouton bouton-secondaire bouton-petit" id="plus-ajout" type="button" hidden>Voir plus de cartes</button>
+      <div class="fenetre-pied">
+        <p class="champ-aide" id="annonce-ajout" role="status"></p>
+        <button class="bouton" type="button" id="terminer-ajout">Terminé</button>
+      </div>
     </dialog>
 
     <p class="annonce" id="annonce" role="status"></p>

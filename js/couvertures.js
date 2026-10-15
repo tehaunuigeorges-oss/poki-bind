@@ -20,8 +20,6 @@ export const COUVERTURES = [
   { id: "forge", nom: "Forge", type: "illustre", image: "img/binders/forge", prix: 500 },
 ];
 
-const COULEURS = COUVERTURES.filter((c) => c.type === "couleur");
-
 // La couverture d'un identifiant (la première couleur si l'identifiant est inconnu).
 export function couverture(id) {
   return COUVERTURES.find((c) => c.id === id) ?? COUVERTURES[0];
@@ -30,11 +28,4 @@ export function couverture(id) {
 // Une couverture est utilisable si c'est une couleur, ou une illustration débloquée.
 export function estDebloquee(choix, debloquees) {
   return choix.type === "couleur" || debloquees.includes(choix.id);
-}
-
-// Couleur de départ du binder d'un set : toujours la même pour un set donné, et variée d'un set à l'autre.
-export function couleurParDefaut(idSet) {
-  let somme = 0;
-  for (const caractere of String(idSet)) somme = (somme * 31 + caractere.charCodeAt(0)) % 9973;
-  return COULEURS[somme % COULEURS.length].id;
 }

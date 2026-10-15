@@ -226,8 +226,8 @@ function afficherMessage(titre, texte, { erreur = false, reessayer = false } = {
     </div>`;
 }
 
-// ---------- Placer dans un binder libre ----------
-// (les binders de set se remplissent tout seuls avec la collection)
+// ---------- Placer dans un binder ----------
+
 
 const fenetrePlacer = document.getElementById("fenetre-placer");
 const choixBinders = document.getElementById("choix-binders");
@@ -242,7 +242,7 @@ async function ouvrirFenetrePlacer() {
           <span>${echapper(binder.nom)} <small>· ${binder.cartes.length} ${binder.cartes.length > 1 ? "cartes" : "carte"}</small></span></label>`).join("")}
       </fieldset>
       <p class="champ-aide"><a href="binders.html?nouveau">Créer un autre binder</a></p>`
-    : `<p>Tu n'as pas encore de binder libre.</p><p><a class="bouton bouton-petit" href="binders.html?nouveau">Créer un binder</a></p>`;
+    : `<p>Tu n'as pas encore de binder.</p><p><a class="bouton bouton-petit" href="binders.html?nouveau">Créer un binder</a></p>`;
   fenetrePlacer.showModal();
 }
 

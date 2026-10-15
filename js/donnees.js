@@ -128,15 +128,13 @@ export function valeurEntree(entree) {
 }
 
 // ---------- Binders ----------
-// binders : {
-//   libres: [{ id, nom, couverture, cartes: [résumé de carte, …], creeLe }],  (rangées dans l'ordre de placement)
-//   sets: { "sv08.5": { couverture } }   (couverture choisie pour le binder d'un set ; sinon une couleur par défaut)
-// }
-// Les binders de set n'ont pas de cartes enregistrées : ils montrent le set entier et la collection.
+// binders : { libres: [{ id, nom, couverture, cartes: [résumé de carte, …], creeLe }] }
+// Les cartes sont rangées dans l'ordre où elles ont été placées. Une carte placée dans un binder
+// n'entre pas dans la collection : on peut y mettre n'importe quelle carte.
 
 function lireBinders() {
   const binders = lire("binders", {});
-  return { libres: Array.isArray(binders.libres) ? binders.libres : [], sets: binders.sets ?? {} };
+  return { libres: Array.isArray(binders.libres) ? binders.libres : [] };
 }
 
 export async function getBinders() {
@@ -186,12 +184,6 @@ export async function retirerDuBinder(idBinder, position) {
   binder.cartes.splice(position, 1);
   ecrire("binders", binders);
   return binder;
-}
-
-export async function choisirCouvertureDeSet(idSet, couverture) {
-  const binders = lireBinders();
-  binders.sets[idSet] = { couverture };
-  ecrire("binders", binders);
 }
 
 // Couvertures illustrées débloquées dans la boutique (aucune tant qu'elle n'est pas ouverte).
