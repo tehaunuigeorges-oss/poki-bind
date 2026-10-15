@@ -705,7 +705,7 @@ main.a-propos { gap: 44px; }
   border-radius: 4px;
   background: color-mix(in srgb, var(--teinte) 40%, #fff);
 }
-.visuel-carte.sans-image img, .visuel-carte.sans-image .langue-image { display: none; }
+.visuel-carte.sans-image img, .visuel-carte:not(.chargee) .langue-image { display: none; }
 .visuel-carte.sans-image .carte-remplacement {
   position: absolute;
   inset: 0;
@@ -1383,3 +1383,63 @@ body.dark .pochette { background: rgb(255 255 255 / .1); }
   border-top: 1px solid var(--line);
 }
 .fenetre-pied .champ-aide { font-size: 13px; }
+
+/* Pochettes au choix : « + » d'une pochette vide, déplacement d'une carte (bouton ou glisser-déposer) */
+.pochette-ajout, .pochette-cible {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink);
+}
+.pochette-ajout span, .pochette-plus { font-size: 26px; font-weight: 300; line-height: 1; opacity: .35; }
+.pochette-ajout:hover, .pochette-ajout:focus-visible { background: rgb(255 255 255 / .55); }
+.pochette-ajout:hover span, .pochette-ajout:focus-visible span { opacity: .9; }
+body.dark .pochette-ajout:hover, body.dark .pochette-ajout:focus-visible { background: rgb(255 255 255 / .12); }
+.pochette-cible .visuel-carte { width: 100%; height: 100%; }
+
+.deplacer-carte {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--on-ink);
+  opacity: 0;
+}
+.deplacer-carte svg { width: 15px; height: 15px; }
+.pochette:hover .deplacer-carte, .pochette:focus-within .deplacer-carte { opacity: 1; }
+@media (hover: none) {
+  .deplacer-carte { opacity: 1; }
+}
+.pochette[draggable="true"] { cursor: grab; }
+.pochette.glissee { opacity: .4; }
+.pochette.survolee, .en-deplacement .pochette-cible:hover, .en-deplacement .pochette-cible:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.en-deplacement .pochette.selectionnee { outline: 3px dashed var(--ink); outline-offset: 2px; }
+.en-deplacement .pochette.selectionnee .visuel-carte { opacity: .5; }
+
+.bandeau-deplacement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+  background: var(--bg);
+  font-size: 14px;
+}

@@ -1,9 +1,10 @@
 // Mes binders : un rayon de couvertures ; un clic ouvre le binder en double page de 3 × 3 pochettes
-// (une seule page sur téléphone). Les cartes s'ajoutent depuis le binder (« Ajouter des cartes »)
-// ou depuis la fiche d'une carte (« Placer dans un binder »), et se rangent dans l'ordre d'ajout.
+// (une seule page sur téléphone). Les cartes s'ajoutent depuis le binder (« Ajouter des cartes », ou le « + »
+// d'une pochette vide pour choisir sa place) ou depuis la fiche d'une carte (« Placer dans un binder »).
+// Une carte se déplace en la glissant sur une autre pochette, ou avec son bouton « Déplacer ».
 
-import { getBinders, creerBinder, modifierBinder, supprimerBinder, placerCarte, retirerDuBinder,
-  getCouverturesDebloquees } from "../donnees.js";
+import { getBinders, creerBinder, modifierBinder, supprimerBinder, placerCarte, deplacerCarte, retirerDuBinder,
+  nombreDeCartes, getCouverturesDebloquees } from "../donnees.js";
 import { getIndex, chercherCartes, ErreurTcgdex } from "../tcgdex.js";
 import { COUVERTURES, couverture, estDebloquee } from "../couvertures.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
@@ -23,6 +24,7 @@ let debloquees = [];
 let ouvert = null;         // le binder ouvert (objet de « libres »)
 let premierePage = 0;
 let enEdition = null;      // binder modifié dans la fenêtre (null : création)
+let aDeplacer = null;      // position de la carte en cours de déplacement (null : aucune)
 
 const pluriel = (nombre, mot) => `${formaterNombre(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;
 const lisible = (nombre) => `${formaterNombre(nombre)} ${nombre > 1 ? "cartes placées" : "carte placée"}`;
@@ -44,7 +46,7 @@ function afficherEtagere() {
       <button class="binder-couverture" type="button" data-binder="${echapper(binder.id)}" aria-expanded="${ouvert?.id === binder.id}" aria-controls="binder-ouvert">
         ${couvertureHtml(binder.couverture)}
         <span class="binder-nom">${echapper(binder.nom)}</span>
-        <span class="binder-infos num">${pluriel(binder.cartes.length, "carte")}</span>
+        <span class="binder-infos num">${pluriel(nombreDeCartes(binder), "carte")}</span>
       </button>
     </li>`).join("") + `<li><button class="binder-nouveau" type="button" data-action="nouveau"><span aria-hidden="true">+</span> Nouveau binder</button></li>`;
 }
@@ -52,16 +54,42 @@ function afficherEtagere() {
 // ---------- Binder ouvert ----------
 
 const pagesVisibles = () => (doublePage.matches ? 2 : 1);
-const nombrePages = () => Math.max(2, Math.ceil(ouvert.cartes.length / PAR_PAGE));
+// Toujours une page vide de plus que la dernière utilisée (pour pouvoir y placer des cartes),
+// en nombre pair : une feuille a deux faces.
+function nombrePages() {
+  const pages = Math.ceil(ouvert.cartes.length / PAR_PAGE) + 1;
+  return Math.max(2, pages + (pages % 2));
+}
+
+const nomPochette = (position) => `pochette ${(position % PAR_PAGE) + 1} de la page ${Math.floor(position / PAR_PAGE) + 1}`;
+
+const ICONE_DEPLACER = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>';
 
 function pochette(carte, position) {
-  if (!carte) return `<li class="pochette vide"></li>`;
-  return `<li class="pochette">
-      <a href="carte.html?id=${encodeURIComponent(carte.id)}" class="pochette-lien">
+  // Déplacement en cours : chaque pochette devient une cible
+  if (aDeplacer !== null) {
+    const choisie = position === aDeplacer;
+    const etiquette = choisie
+      ? `Annuler le déplacement de ${carte.nom}`
+      : `Déposer ici, ${nomPochette(position)}${carte ? `, à la place de ${carte.nom}` : ""}`;
+    return `<li class="pochette${carte ? "" : " vide"}${choisie ? " selectionnee" : ""}" data-position="${position}">
+        <button class="pochette-cible" type="button" data-deposer="${position}" aria-label="${echapper(etiquette)}">
+          ${carte ? visuelCarte(carte) : '<span class="pochette-plus" aria-hidden="true">+</span>'}
+        </button>
+      </li>`;
+  }
+  if (!carte) {
+    return `<li class="pochette vide" data-position="${position}">
+        <button class="pochette-ajout" type="button" data-placer="${position}" aria-label="Ajouter une carte dans la ${nomPochette(position)}"><span aria-hidden="true">+</span></button>
+      </li>`;
+  }
+  return `<li class="pochette" data-position="${position}" draggable="true">
+      <a href="carte.html?id=${encodeURIComponent(carte.id)}" class="pochette-lien" draggable="false">
         ${visuelCarte(carte)}
-        <span class="sr-only">${echapper(`${carte.nom}, ${carte.numero}`)}</span>
+        <span class="sr-only">${echapper(`${carte.nom}, ${carte.numero}, ${nomPochette(position)}`)}</span>
       </a>
       <button class="retirer-carte" type="button" data-position="${position}" aria-label="Retirer ${echapper(carte.nom)} du binder">×</button>
+      <button class="deplacer-carte" type="button" data-deplacer="${position}" aria-label="Déplacer ${echapper(carte.nom)}">${ICONE_DEPLACER}</button>
     </li>`;
 }
 
@@ -86,7 +114,7 @@ function afficherBinder() {
     <div class="binder-tete">
       <div class="tete-page">
         <h2 id="titre-binder" tabindex="-1">${echapper(ouvert.nom)}</h2>
-        <p class="num" id="pages-binder" aria-live="polite">${textePages} · ${lisible(ouvert.cartes.length)}</p>
+        <p class="num" id="pages-binder" aria-live="polite">${textePages} · ${lisible(nombreDeCartes(ouvert))}</p>
       </div>
       <div class="binder-commandes">
         <button class="bouton bouton-petit" type="button" data-action="ajouter"><span aria-hidden="true">+</span> Ajouter des cartes</button>
@@ -95,11 +123,15 @@ function afficherBinder() {
         <button class="bouton-icone" type="button" data-action="suivante" aria-label="Pages suivantes"${derniere >= total ? " disabled" : ""}>›</button>
       </div>
     </div>
-    <div class="double-page${choix.type === "illustre" ? " illustree" : ""}" ${fond}>
+    ${aDeplacer !== null ? `<div class="bandeau-deplacement" role="status">
+        <p>Choisis la pochette où mettre <b>${echapper(ouvert.cartes[aDeplacer].nom)}</b>. Tu peux tourner les pages ; sur une pochette occupée, les deux cartes s'échangent.</p>
+        <button class="bouton bouton-secondaire bouton-petit" type="button" data-action="annuler-deplacement">Annuler</button>
+      </div>` : ""}
+    <div class="double-page${choix.type === "illustre" ? " illustree" : ""}${aDeplacer !== null ? " en-deplacement" : ""}" ${fond}>
       ${page(premierePage, "gauche")}
       ${pagesVisibles() === 2 ? `<div class="anneaux" aria-hidden="true"><i></i><i></i><i></i></div>${page(premierePage + 1, "droite")}` : ""}
     </div>
-    <p class="note-page">Tu peux aussi placer une carte depuis sa fiche, avec « Placer dans un binder ». Le « × » d'une pochette retire la carte du binder, sans toucher à ta collection.</p>`;
+    <p class="note-page">Le « + » d'une pochette vide y ajoute une carte. Pour déplacer une carte, glisse-la sur une autre pochette, ou utilise son bouton <span aria-hidden="true">✥</span> « Déplacer » (sur téléphone aussi). Le « × » retire la carte du binder, sans toucher à ta collection.</p>`;
 }
 
 function memoriserDansAdresse() {
@@ -114,6 +146,7 @@ function memoriserDansAdresse() {
 
 function ouvrir(id, { page: numeroPage = 0, defiler = true } = {}) {
   ouvert = libres.find((binder) => binder.id === id) ?? null;
+  aDeplacer = null;
   if (!ouvert) return;
   premierePage = numeroPage;
   panneau.hidden = false;
@@ -229,6 +262,8 @@ let trouvees = [];
 let montrees = 0;
 let ajoutees = 0;
 let minuterie = 0;
+let cibleAjout = null;     // pochette choisie avec son « + » (null : première pochette vide)
+let derniereAjoutee = null;
 
 function infosSet(carte) {
   const set = index.sets.get(carte.set);
@@ -236,7 +271,7 @@ function infosSet(carte) {
 }
 
 function dansLeBinder(id) {
-  return ouvert.cartes.filter((carte) => carte.id === id).length;
+  return ouvert.cartes.filter((carte) => carte?.id === id).length;
 }
 
 function texteBouton(id) {
@@ -282,8 +317,11 @@ function chercherDansFenetre() {
   montrerJusqua(PAR_LOT);
 }
 
-async function ouvrirFenetreAjout() {
-  document.getElementById("titre-ajout").textContent = `Ajouter des cartes à « ${ouvert.nom} »`;
+async function ouvrirFenetreAjout(position = null) {
+  cibleAjout = position;
+  document.getElementById("titre-ajout").textContent = position === null
+    ? `Ajouter des cartes à « ${ouvert.nom} »`
+    : `Ajouter une carte dans la ${nomPochette(position)}`;
   annonceAjout.textContent = "";
   ajoutees = 0;
   fenetreAjout.showModal();
@@ -328,9 +366,15 @@ resultatsAjout.addEventListener("click", async (evenement) => {
     set: { id: carte.set, nom: nomSet, officiel: index.sets.get(carte.set)?.officiel ?? null }, langue: "fr",
   };
   try {
-    const position = await placerCarte(ouvert.id, resume);
+    const position = await placerCarte(ouvert.id, resume, cibleAjout);
     remplacer((await getBinders()).libres.find((b) => b.id === ouvert.id));
     ajoutees += 1;
+    derniereAjoutee = position;
+    // Pochette choisie avec son « + » : la carte y est, la fenêtre se ferme
+    if (cibleAjout !== null) {
+      fermerAjout();
+      return;
+    }
     bouton.textContent = texteBouton(carte.id);
     bouton.classList.add("bouton-secondaire");
     annonceAjout.textContent = `${carte.nom} ajoutée, page ${Math.floor(position / PAR_PAGE) + 1}.`;
@@ -348,13 +392,94 @@ document.getElementById("terminer-ajout").addEventListener("click", fermerAjout)
 // À la fermeture : le binder montre la page de la dernière carte ajoutée
 fenetreAjout.addEventListener("close", () => {
   if (ajoutees) {
-    premierePage = Math.floor((ouvert.cartes.length - 1) / PAR_PAGE);
+    premierePage = Math.floor(derniereAjoutee / PAR_PAGE);
     afficherEtagere();
     afficherBinder();
     memoriserDansAdresse();
-    annoncer(`${pluriel(ajoutees, "carte")} ${ajoutees > 1 ? "ajoutées" : "ajoutée"} à « ${ouvert.nom} ».`);
+    annoncer(cibleAjout !== null
+      ? `${ouvert.cartes[derniereAjoutee].nom} est dans la ${nomPochette(derniereAjoutee)}.`
+      : `${pluriel(ajoutees, "carte")} ${ajoutees > 1 ? "ajoutées" : "ajoutée"} à « ${ouvert.nom} ».`);
   }
-  panneau.querySelector('[data-action="ajouter"]')?.focus();
+  const placee = cibleAjout !== null && ajoutees ? panneau.querySelector(`.pochette[data-position="${derniereAjoutee}"] a`) : null;
+  const pochetteVisee = cibleAjout !== null ? panneau.querySelector(`[data-placer="${cibleAjout}"]`) : null;
+  (placee ?? pochetteVisee ?? panneau.querySelector('[data-action="ajouter"]'))?.focus();
+  cibleAjout = null;
+});
+
+// ---------- Déplacer une carte ----------
+// Au clavier ou au doigt : bouton « Déplacer », puis la pochette d'arrivée (on peut tourner les pages).
+// À la souris : glisser la carte sur une autre pochette de la double page.
+
+function commencerDeplacement(position) {
+  aDeplacer = position;
+  afficherBinder();
+  panneau.querySelector(".pochette-cible:not([data-deposer='" + position + "'])")?.focus();
+}
+
+function annulerDeplacement() {
+  const position = aDeplacer;
+  aDeplacer = null;
+  afficherBinder();
+  panneau.querySelector(`[data-deplacer="${position}"]`)?.focus();
+}
+
+async function deplacer(depart, arrivee) {
+  const nom = ouvert.cartes[depart]?.nom;
+  aDeplacer = null;
+  if (depart === arrivee || !nom) {
+    afficherBinder();
+    return;
+  }
+  const echange = ouvert.cartes[arrivee]?.nom;
+  try {
+    remplacer(await deplacerCarte(ouvert.id, depart, arrivee));
+  } catch (erreur) {
+    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+  }
+  afficherEtagere();
+  afficherBinder();
+  annoncer(echange ? `${nom} et ${echange} ont échangé leur place.` : `${nom} est dans la ${nomPochette(arrivee)}.`);
+}
+
+async function deposer(arrivee) {
+  const depart = aDeplacer;
+  await deplacer(depart, arrivee);
+  panneau.querySelector(`[data-deplacer="${arrivee}"]`)?.focus();
+}
+
+document.addEventListener("keydown", (evenement) => {
+  if (evenement.key === "Escape" && aDeplacer !== null && !document.querySelector("dialog[open]")) annulerDeplacement();
+});
+
+// Glisser-déposer à la souris
+let glissee = null;
+panneau.addEventListener("dragstart", (evenement) => {
+  const depart = evenement.target.closest?.(".pochette[draggable=true]");
+  if (!depart) return;
+  glissee = Number(depart.dataset.position);
+  evenement.dataTransfer.effectAllowed = "move";
+  evenement.dataTransfer.setData("text/plain", String(glissee));
+  depart.classList.add("glissee");
+});
+panneau.addEventListener("dragover", (evenement) => {
+  const cible = evenement.target.closest?.(".pochette");
+  if (glissee === null || !cible) return;
+  evenement.preventDefault();
+  evenement.dataTransfer.dropEffect = "move";
+  panneau.querySelectorAll(".pochette.survolee").forEach((p) => p !== cible && p.classList.remove("survolee"));
+  cible.classList.add("survolee");
+});
+panneau.addEventListener("drop", (evenement) => {
+  const cible = evenement.target.closest?.(".pochette");
+  if (glissee === null || !cible) return;
+  evenement.preventDefault();
+  const depart = glissee;
+  glissee = null;
+  deplacer(depart, Number(cible.dataset.position));
+});
+panneau.addEventListener("dragend", () => {
+  glissee = null;
+  panneau.querySelectorAll(".glissee, .survolee").forEach((p) => p.classList.remove("glissee", "survolee"));
 });
 
 // ---------- Clics ----------
@@ -367,6 +492,10 @@ document.getElementById("contenu").addEventListener("click", async (evenement) =
     ouvrir(cible.dataset.binder);
     panneau.querySelector("h2").focus({ preventScroll: true });
   } else if (cible.dataset.action === "ajouter") ouvrirFenetreAjout();
+  else if (cible.dataset.placer) ouvrirFenetreAjout(Number(cible.dataset.placer));
+  else if (cible.dataset.deplacer) commencerDeplacement(Number(cible.dataset.deplacer));
+  else if (cible.dataset.deposer) deposer(Number(cible.dataset.deposer));
+  else if (cible.dataset.action === "annuler-deplacement") annulerDeplacement();
   else if (cible.dataset.action === "modifier") ouvrirFenetre(ouvert);
   else if (cible.dataset.action === "precedente") changerDePage(-1);
   else if (cible.dataset.action === "suivante") changerDePage(1);

@@ -128,9 +128,9 @@ export function valeurEntree(entree) {
 }
 
 // ---------- Binders ----------
-// binders : { libres: [{ id, nom, couverture, cartes: [résumé de carte, …], creeLe }] }
-// Les cartes sont rangées dans l'ordre où elles ont été placées. Une carte placée dans un binder
-// n'entre pas dans la collection : on peut y mettre n'importe quelle carte.
+// binders : { libres: [{ id, nom, couverture, cartes: [résumé de carte ou null, …], creeLe }] }
+// cartes[i] est la pochette i (9 par page : 0 à 8 sur la page 1…) ; null = pochette vide.
+// Une carte placée dans un binder n'entre pas dans la collection : on peut y mettre n'importe quelle carte.
 
 function lireBinders() {
   const binders = lire("binders", {});
@@ -166,22 +166,53 @@ export async function supprimerBinder(id) {
   ecrire("binders", binders);
 }
 
-// Place une carte (résumé, voir resumeCarte dans tcgdex.js) dans la première pochette libre, à la fin.
-// Renvoie sa position (0 = première pochette).
-export async function placerCarte(idBinder, carte) {
-  const binders = lireBinders();
+function binderModifiable(binders, idBinder) {
   const binder = binders.libres.find((b) => b.id === idBinder);
   if (!binder) throw new Error("Binder introuvable");
-  binder.cartes.push(carte);
-  ecrire("binders", binders);
-  return binder.cartes.length - 1;
+  binder.cartes = Array.from(binder.cartes, (carte) => carte ?? null);
+  return binder;
 }
 
+// Les pochettes vides en fin de binder ne sont pas gardées.
+function tasser(binder) {
+  while (binder.cartes.length && !binder.cartes.at(-1)) binder.cartes.pop();
+}
+
+// Nombre de cartes d'un binder (pochettes remplies).
+export function nombreDeCartes(binder) {
+  return binder.cartes.filter(Boolean).length;
+}
+
+// Place une carte (résumé, voir resumeCarte dans tcgdex.js) dans la pochette demandée si elle est vide,
+// sinon dans la première pochette vide. Renvoie sa position (0 = première pochette).
+export async function placerCarte(idBinder, carte, position = null) {
+  const binders = lireBinders();
+  const binder = binderModifiable(binders, idBinder);
+  let place = position !== null && position >= 0 && !binder.cartes[position] ? position : binder.cartes.indexOf(null);
+  if (place < 0) place = binder.cartes.length;
+  while (binder.cartes.length < place) binder.cartes.push(null);
+  binder.cartes[place] = carte;
+  ecrire("binders", binders);
+  return place;
+}
+
+// Déplace la carte d'une pochette vers une autre ; si l'autre est occupée, les deux cartes s'échangent.
+export async function deplacerCarte(idBinder, depart, arrivee) {
+  const binders = lireBinders();
+  const binder = binderModifiable(binders, idBinder);
+  while (binder.cartes.length <= Math.max(depart, arrivee)) binder.cartes.push(null);
+  [binder.cartes[depart], binder.cartes[arrivee]] = [binder.cartes[arrivee], binder.cartes[depart]];
+  tasser(binder);
+  ecrire("binders", binders);
+  return binder;
+}
+
+// Vide une pochette : les autres cartes ne bougent pas.
 export async function retirerDuBinder(idBinder, position) {
   const binders = lireBinders();
-  const binder = binders.libres.find((b) => b.id === idBinder);
-  if (!binder) return null;
-  binder.cartes.splice(position, 1);
+  const binder = binderModifiable(binders, idBinder);
+  binder.cartes[position] = null;
+  tasser(binder);
   ecrire("binders", binders);
   return binder;
 }

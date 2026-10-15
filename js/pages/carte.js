@@ -2,7 +2,7 @@
 // informations, prix Cardmarket de la variante choisie et sa courbe.
 
 import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, getSerie, ErreurTcgdex } from "../tcgdex.js";
-import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte } from "../donnees.js";
+import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte, nombreDeCartes } from "../donnees.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
 
@@ -239,7 +239,7 @@ async function ouvrirFenetrePlacer() {
   choixBinders.innerHTML = libres.length
     ? `<fieldset class="liste-choix"><legend class="sr-only">Binder</legend>${libres.map((binder, rang) => `
         <label class="case"><input type="radio" name="binder" value="${echapper(binder.id)}"${rang === 0 ? " checked" : ""}>
-          <span>${echapper(binder.nom)} <small>· ${binder.cartes.length} ${binder.cartes.length > 1 ? "cartes" : "carte"}</small></span></label>`).join("")}
+          <span>${echapper(binder.nom)} <small>· ${nombreDeCartes(binder)} ${nombreDeCartes(binder) > 1 ? "cartes" : "carte"}</small></span></label>`).join("")}
       </fieldset>
       <p class="champ-aide"><a href="binders.html?nouveau">Créer un autre binder</a></p>`
     : `<p>Tu n'as pas encore de binder.</p><p><a class="bouton bouton-petit" href="binders.html?nouveau">Créer un binder</a></p>`;
@@ -254,7 +254,7 @@ document.getElementById("formulaire-placer").addEventListener("submit", async (e
   try {
     const position = await placerCarte(choix.value, resumeCarte(carte));
     fenetrePlacer.close();
-    annoncer(`${carte.name} est dans « ${nom} », page ${Math.floor(position / 9) + 1}.`);
+    annoncer(`${carte.name} est dans « ${nom} », page ${Math.floor(position / 9) + 1}, pochette ${(position % 9) + 1}. Tu peux la déplacer depuis la page Binders.`);
   } catch (erreur) {
     fenetrePlacer.close();
     annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
