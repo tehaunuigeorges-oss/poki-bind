@@ -685,7 +685,7 @@ main.a-propos { gap: 44px; }
   background: var(--surface);
   container-type: inline-size;
 }
-.visuel-carte:not(.chargee, .sans-image, .manquante) { animation: lueur 1.4s ease-in-out infinite; }
+.visuel-carte:not(.chargee, .sans-image) { animation: lueur 1.4s ease-in-out infinite; }
 .visuel-carte.chargee { background: none; }
 .visuel-carte img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 
@@ -1147,16 +1147,8 @@ select.champ.champ-petit { padding-right: 40px; }
 }
 .puce-variante small { margin-left: 2px; font-weight: 500; }
 
-/* Carte manquante : en pointillés, avec son nom et son numéro */
-.visuel-carte.manquante { border: 2px dashed var(--line); border-radius: 8px; background: var(--surface); }
-.visuel-carte.manquante .carte-remplacement {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 6% 8%;
-  font-size: clamp(10px, 7cqi, 14px);
-  font-weight: 500;
-  color: var(--muted);
-}
+/* Carte que tu n'as pas encore : en gris et plus pâle (couleur normale au survol ou au clavier).
+   filter et non opacity : l'opacité sert déjà au clignotement pendant le chargement. */
+.tuile.manquante .visuel-carte { filter: grayscale(1) opacity(.45); transition: filter .15s; }
+.tuile.manquante .tuile-lien:hover .visuel-carte,
+.tuile.manquante .tuile-lien:focus-visible .visuel-carte { filter: grayscale(.3) opacity(.85); }

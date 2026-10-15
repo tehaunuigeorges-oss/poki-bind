@@ -1,4 +1,4 @@
-// Page d'un set (set.html?id=sv08.5) : toutes ses cartes, possédées ou manquantes (en pointillés),
+// Page d'un set (set.html?id=sv08.5) : toutes ses cartes, possédées en couleur, manquantes en gris,
 // avec tri, filtre, variantes possédées et ajout rapide.
 
 import { getSet, getSerie, imageDeSecours, numeroLisible, estOfficielle, VARIANTES, ErreurTcgdex } from "../tcgdex.js";
@@ -30,9 +30,7 @@ const pluriel = (nombre, mot, motPluriel = `${mot}s`) => `${formaterNombre(nombr
 function tuile(carte) {
   const entree = possedees.get(carte.id);
   const numero = numeroComplet(carte);
-  const visuel = entree
-    ? visuelCarte({ ...carte, numero })
-    : `<span class="visuel-carte manquante"><span class="carte-remplacement" aria-hidden="true"><span>${echapper(carte.nom)}</span><span class="num">${echapper(numero)}</span></span></span>`;
+  const visuel = visuelCarte({ ...carte, numero });
   const etat = entree ? `possédée, ${pluriel(nombreExemplaires(entree), "exemplaire")}` : "manquante";
   const puces = entree
     ? VARIANTES.filter((v) => entree.variantes[v.cle]).map((v) => {
@@ -120,8 +118,16 @@ function afficher(serie) {
     <div class="progression grande" id="barre-set" aria-hidden="true"><span></span></div>
     <ul class="grille-cartes grille-set" id="grille-set"></ul>
     <p class="aide-resultats" id="rien-a-voir" hidden>Aucune carte à afficher avec ce choix.</p>
-    <p class="note-page">Les cartes manquantes restent visibles en pointillés. Les lettres sous une carte indiquent les variantes que tu possèdes : N normale, R reverse, H holo, PB Poké Ball, MB Master Ball. Le « + » ajoute un exemplaire sans passer par la recherche.</p>`;
+    <p class="note-page">Les cartes que tu n'as pas encore sont en gris. Les lettres sous une carte indiquent les variantes que tu possèdes : N normale, R reverse, H holo, PB Poké Ball, MB Master Ball. Le « + » ajoute un exemplaire sans passer par la recherche.</p>`;
   majCartes();
+}
+
+// Journal dans la console (touche F12) : cartes du set marquées comme non possédées.
+function journaliser() {
+  const manquantes = cartes.filter((carte) => !possedees.has(carte.id));
+  console.groupCollapsed(`Pokibind · ${set.name} : ${cartes.length - manquantes.length} possédées, ${manquantes.length} non possédées (en gris)`);
+  console.table(manquantes.map((carte) => ({ numero: numeroComplet(carte), nom: carte.nom, id: carte.id })));
+  console.groupEnd();
 }
 
 function afficherMessage(titre, texte, { erreur = false, reessayer = false } = {}) {
@@ -223,6 +229,7 @@ async function charger() {
       };
     });
     afficher(serie);
+    journaliser();
     replacerLaPage();
   } catch (erreur) {
     if (erreur instanceof ErreurTcgdex && erreur.raison === "introuvable") {
