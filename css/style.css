@@ -685,7 +685,7 @@ main.a-propos { gap: 44px; }
   background: var(--surface);
   container-type: inline-size;
 }
-.visuel-carte:not(.chargee, .sans-image) { animation: lueur 1.4s ease-in-out infinite; }
+.visuel-carte:not(.chargee, .sans-image, .manquante) { animation: lueur 1.4s ease-in-out infinite; }
 .visuel-carte.chargee { background: none; }
 .visuel-carte img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 
@@ -1008,4 +1008,155 @@ button.ajout-rapide:hover { border-color: var(--ink); }
 
 @media (max-width: 759px) {
   .fiche-actions .bouton { flex: 1 1 100%; }
+}
+
+
+
+/* ---------- 15. Collection (collection.html) ---------- */
+
+/* Titre de page avec un bouton à droite (sur ordinateur) */
+.tete-avec-action { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+
+/* Onglets qui sont des liens vers d'autres pages (Cartes / Scellé) */
+.onglets { display: flex; gap: 24px; border-bottom: 1px solid var(--line); }
+.onglets a {
+  margin-bottom: -1px;
+  padding: 10px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+.onglets a:hover { color: var(--ink); }
+.onglets a[aria-current="page"] { border-bottom-color: var(--ink); color: var(--ink); }
+.onglets .num { margin-left: 4px; font-size: 12px; font-weight: 400; color: var(--muted); }
+
+.resume-collection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 36px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+}
+.resume-collection > div { display: grid; gap: 4px; }
+.chiffre { font-family: var(--font-titre); font-size: 26px; font-weight: 300; line-height: 1.2; }
+.lien-discret { margin-left: auto; font-size: 14px; text-decoration: none; }
+.lien-discret:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.sets-entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* Puces de filtre (séries) : boutons avec aria-pressed */
+.puces { display: flex; flex-wrap: wrap; gap: 8px; }
+.puces button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13px;
+}
+.puces button:hover { border-color: var(--muted); }
+.puces button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--on-ink); }
+.puces .illustration-logo { max-width: 48px; height: 16px; }
+
+.liste-sets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carte-set {
+  display: grid;
+  gap: 14px;
+  height: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--rayon-m);
+  color: inherit;
+  text-decoration: none;
+}
+a.carte-set:hover { border-color: var(--muted); }
+.squelette-set { min-height: 120px; align-content: center; }
+.carte-set-haut { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.carte-set-titre { display: grid; gap: 2px; min-width: 0; }
+.carte-set-nom { font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.carte-set-serie { font-size: 13px; color: var(--muted); }
+.carte-set-chiffres { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
+.carte-set.complet .carte-set-chiffres span:last-child { color: var(--good); font-weight: 500; }
+
+/* Logo du set dans un carré ; sans logo (ou s'il ne charge pas), son sigle (« PRE ») */
+.vignette-set {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.vignette-set .illustration-logo { width: 100%; max-width: none; height: 100%; }
+.vignette-set:empty::after {
+  content: attr(data-sigle);
+  font-family: var(--font-titre);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.vignette-set.grande { width: 76px; height: 76px; border-radius: 16px; }
+.vignette-set.grande:empty::after { font-size: 18px; }
+
+/* Barre de progression vers le set complet (verte une fois complet) */
+.progression { display: block; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.progression > span { display: block; height: 100%; border-radius: inherit; background: var(--ink); }
+.carte-set.complet .progression > span, .progression.complet > span { background: var(--good); }
+.progression.grande { height: 6px; }
+
+.note-page { padding-top: 16px; border-top: 1px dashed var(--line); font-size: 13px; color: var(--muted); }
+
+
+/* ---------- 16. Page d'un set (set.html) ---------- */
+
+.set-page { display: grid; gap: 24px; }
+.set-page > .squelette { max-width: 420px; }
+
+.tete-set { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+.tete-set-texte { display: grid; gap: 4px; flex: 1 1 260px; min-width: 0; }
+.tete-set-resume { color: var(--muted); }
+.tete-set-reglages { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.champ-petit { width: auto; min-height: 40px; padding-block: 7px; font-size: 14px; }
+select.champ.champ-petit { padding-right: 40px; }
+
+.grille-set { row-gap: 18px; }
+.tuile-pied { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 30px; }
+.tuile-pied .ajout-rapide { position: static; flex: none; }
+.puces-variantes { display: flex; flex-wrap: wrap; gap: 4px; }
+.puce-variante {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+.puce-variante small { margin-left: 2px; font-weight: 500; }
+
+/* Carte manquante : en pointillés, avec son nom et son numéro */
+.visuel-carte.manquante { border: 2px dashed var(--line); border-radius: 8px; background: var(--surface); }
+.visuel-carte.manquante .carte-remplacement {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6% 8%;
+  font-size: clamp(10px, 7cqi, 14px);
+  font-weight: 500;
+  color: var(--muted);
 }

@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/collection.js"></script>
 </head>
 <body data-page="collection" data-espace="membre">
   <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
@@ -23,10 +24,49 @@
   <header class="entete" id="entete"></header>
 
   <main class="wrap" id="contenu">
-    <div class="tete-page">
-      <h1>Ma collection</h1>
-      <p>Cette page arrive à l'étape 5.</p>
+    <div class="tete-page tete-avec-action">
+      <div class="tete-page">
+        <h1>Ma collection</h1>
+        <p>Toutes les cartes que tu possèdes, regroupées par set.</p>
+      </div>
+      <a class="bouton" href="recherche.html"><span aria-hidden="true">+</span> Ajouter des cartes</a>
     </div>
+
+    <nav class="onglets" aria-label="Partie de la collection">
+      <a href="collection.html" aria-current="page">Cartes <span class="num" id="onglet-cartes"></span></a>
+      <a href="scelle.html">Scellé</a>
+    </nav>
+
+    <section class="resume-collection" aria-label="Résumé de la collection">
+      <div>
+        <p class="surtitre">Valeur totale</p>
+        <p class="chiffre num" id="valeur-totale">—</p>
+      </div>
+      <div>
+        <p class="surtitre">Cartes</p>
+        <p class="chiffre num" id="nombre-cartes">—</p>
+      </div>
+      <a class="lien-discret" href="statistiques.html">Voir les statistiques <span aria-hidden="true">→</span></a>
+    </section>
+
+    <section class="section" aria-labelledby="titre-sets">
+      <div class="sets-entete">
+        <h2 id="titre-sets">Sets</h2>
+        <div class="puces" id="filtre-series" role="group" aria-label="Série"></div>
+      </div>
+      <ul class="liste-sets" id="liste-sets" aria-busy="true">
+        <li class="carte-set squelette-set" aria-hidden="true"><span class="squelette courte"></span><span class="squelette"></span></li>
+        <li class="carte-set squelette-set" aria-hidden="true"><span class="squelette courte"></span><span class="squelette"></span></li>
+        <li class="carte-set squelette-set" aria-hidden="true"><span class="squelette courte"></span><span class="squelette"></span></li>
+      </ul>
+      <div class="encart" id="collection-vide" hidden>
+        <h3>Ta collection est vide</h3>
+        <p>Cherche une carte, puis ajoute-la en un clic avec le « + ».</p>
+        <a class="bouton bouton-petit" href="recherche.html">Rechercher une carte</a>
+      </div>
+    </section>
+
+    <p class="note-page">La valeur utilise le dernier prix Cardmarket connu de chaque carte, relevé quand tu l'ajoutes ou changes ses exemplaires. Un set est complet quand tu as toutes ses cartes numérotées ; les cartes secrètes comptent en bonus.</p>
   </main>
 
   <footer class="pied" id="pied"></footer>

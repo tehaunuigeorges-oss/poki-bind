@@ -2,8 +2,9 @@
 // (voir tcgdex.js), puis la recherche se fait dans le navigateur, sans tenir compte des accents.
 // Sans texte cherché, la page sert à parcourir les cartes par famille et par série, set par set.
 
-import { getIndex, chercherCartes, cartesParSet, FAMILLES, getCarte, variantesDeCarte, resumeCarte, ErreurTcgdex } from "../tcgdex.js";
-import { getCollection, ajouterCarte } from "../donnees.js";
+import { getIndex, chercherCartes, cartesParSet, FAMILLES, ErreurTcgdex } from "../tcgdex.js";
+import { getCollection } from "../donnees.js";
+import { ajouterVarianteCourante, messageErreurAjout } from "../ajout-rapide.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, formaterNombre, annoncer } from "../outils.js";
 
@@ -249,21 +250,17 @@ async function ajoutRapide(evenement) {
   bouton.setAttribute("aria-disabled", "true");
   bouton.classList.add("en-cours");
   try {
-    const carte = await getCarte(id);
-    const variante = variantesDeCarte(carte).find((v) => v.existe);
-    await ajouterCarte(resumeCarte(carte), variante.cle);
+    const { nom, variante } = await ajouterVarianteCourante(id);
     possedees.add(id);
     const avaitLeFocus = document.activeElement === bouton;
     const lien = bouton.closest(".tuile").querySelector(".tuile-lien");
-    bouton.outerHTML = indicateurPossedee(carte.name);
+    bouton.outerHTML = indicateurPossedee(nom);
     if (avaitLeFocus) lien.focus();
-    annoncer(`${carte.name} (${variante.nom.toLowerCase()}) est maintenant dans ta collection.`);
+    annoncer(`${nom} (${variante.nom.toLowerCase()}) est maintenant dans ta collection.`);
   } catch (erreur) {
     bouton.removeAttribute("aria-disabled");
     bouton.classList.remove("en-cours");
-    annoncer(erreur instanceof ErreurTcgdex
-      ? "Impossible d'ajouter la carte : la base de cartes ne répond pas. Réessaie dans un instant."
-      : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    annoncer(messageErreurAjout(erreur));
   }
 }
 grille.addEventListener("click", ajoutRapide);

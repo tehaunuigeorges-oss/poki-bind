@@ -113,6 +113,12 @@ export function illustrationTcgdex(base) {
 // Le numéro d'une carte ne contient jamais de tiret : « sv08.5-074 » → set « sv08.5 »
 export const setDeCarte = (id) => String(id).slice(0, String(id).lastIndexOf("-"));
 
+// Carte de la numérotation officielle du set (« 074/131 ») : c'est elle qui compte pour compléter
+// un set. Au-delà (« 167/131 ») ou avec des lettres (« TG01 »), c'est une carte secrète, en bonus.
+export function estOfficielle(numero, officiel) {
+  return /^\d+$/.test(numero) && (!officiel || Number(numero) <= officiel);
+}
+
 // Numéro lisible (« %3F » dans TCGdex → « ? »)
 export function numeroLisible(numero) {
   try {
@@ -260,11 +266,11 @@ export function cartesParSet(index, idSerie = "", famille = "") {
 // ---------- Variantes et prix ----------
 
 export const VARIANTES = [
-  { cle: "normale", nom: "Normale" },
-  { cle: "reverse", nom: "Reverse" },
-  { cle: "holo", nom: "Holo" },
-  { cle: "pokeball", nom: "Reverse Poké Ball" },
-  { cle: "masterball", nom: "Reverse Master Ball" },
+  { cle: "normale", nom: "Normale", court: "N" },
+  { cle: "reverse", nom: "Reverse", court: "R" },
+  { cle: "holo", nom: "Holo", court: "H" },
+  { cle: "pokeball", nom: "Reverse Poké Ball", court: "PB" },
+  { cle: "masterball", nom: "Reverse Master Ball", court: "MB" },
 ];
 
 // Cardmarket donne deux séries de prix pour un même produit : sans suffixe (carte normale ou holo)

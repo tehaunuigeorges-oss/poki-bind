@@ -115,3 +115,14 @@ function modifierExemplaires(id, variante, difference, resume = null) {
   ecrire("collection", collection);
   return collection[id] ?? null;
 }
+
+// Nombre d'exemplaires d'une carte de la collection, toutes variantes confondues.
+export function nombreExemplaires(entree) {
+  return Object.values(entree.variantes).reduce((somme, nombre) => somme + nombre, 0);
+}
+
+// Valeur d'une carte de la collection : exemplaires × dernier prix connu de chaque variante
+// (les variantes sans prix comptent pour 0).
+export function valeurEntree(entree) {
+  return Object.entries(entree.variantes).reduce((somme, [variante, nombre]) => somme + nombre * (entree.prix?.[variante] ?? 0), 0);
+}
