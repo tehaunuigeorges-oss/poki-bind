@@ -126,3 +126,75 @@ export function nombreExemplaires(entree) {
 export function valeurEntree(entree) {
   return Object.entries(entree.variantes).reduce((somme, [variante, nombre]) => somme + nombre * (entree.prix?.[variante] ?? 0), 0);
 }
+
+// ---------- Binders ----------
+// binders : {
+//   libres: [{ id, nom, couverture, cartes: [résumé de carte, …], creeLe }],  (rangées dans l'ordre de placement)
+//   sets: { "sv08.5": { couverture } }   (couverture choisie pour le binder d'un set ; sinon une couleur par défaut)
+// }
+// Les binders de set n'ont pas de cartes enregistrées : ils montrent le set entier et la collection.
+
+function lireBinders() {
+  const binders = lire("binders", {});
+  return { libres: Array.isArray(binders.libres) ? binders.libres : [], sets: binders.sets ?? {} };
+}
+
+export async function getBinders() {
+  return lireBinders();
+}
+
+export async function creerBinder({ nom, couverture }) {
+  const binders = lireBinders();
+  const binder = { id: `b${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, nom, couverture, cartes: [], creeLe: new Date().toISOString() };
+  binders.libres.push(binder);
+  ecrire("binders", binders);
+  return binder;
+}
+
+// changements : { nom, couverture } (l'un ou l'autre). Renvoie le binder modifié, ou null s'il n'existe plus.
+export async function modifierBinder(id, changements) {
+  const binders = lireBinders();
+  const binder = binders.libres.find((b) => b.id === id);
+  if (!binder) return null;
+  if (changements.nom !== undefined) binder.nom = changements.nom;
+  if (changements.couverture !== undefined) binder.couverture = changements.couverture;
+  ecrire("binders", binders);
+  return binder;
+}
+
+export async function supprimerBinder(id) {
+  const binders = lireBinders();
+  binders.libres = binders.libres.filter((b) => b.id !== id);
+  ecrire("binders", binders);
+}
+
+// Place une carte (résumé, voir resumeCarte dans tcgdex.js) dans la première pochette libre, à la fin.
+// Renvoie sa position (0 = première pochette).
+export async function placerCarte(idBinder, carte) {
+  const binders = lireBinders();
+  const binder = binders.libres.find((b) => b.id === idBinder);
+  if (!binder) throw new Error("Binder introuvable");
+  binder.cartes.push(carte);
+  ecrire("binders", binders);
+  return binder.cartes.length - 1;
+}
+
+export async function retirerDuBinder(idBinder, position) {
+  const binders = lireBinders();
+  const binder = binders.libres.find((b) => b.id === idBinder);
+  if (!binder) return null;
+  binder.cartes.splice(position, 1);
+  ecrire("binders", binders);
+  return binder;
+}
+
+export async function choisirCouvertureDeSet(idSet, couverture) {
+  const binders = lireBinders();
+  binders.sets[idSet] = { couverture };
+  ecrire("binders", binders);
+}
+
+// Couvertures illustrées débloquées dans la boutique (aucune tant qu'elle n'est pas ouverte).
+export async function getCouverturesDebloquees() {
+  return lire("couvertures", []);
+}

@@ -38,6 +38,16 @@
       </div>
       <h1 class="sr-only">Chargement de la carte…</h1>
     </div>
+    <dialog class="fenetre" id="fenetre-placer" aria-labelledby="titre-placer">
+      <form class="formulaire" id="formulaire-placer" novalidate>
+        <h2 id="titre-placer">Placer dans un binder</h2>
+        <div id="choix-binders"></div>
+        <div class="boutons">
+          <button class="bouton" type="submit" id="bouton-placer">Placer la carte</button>
+          <button class="bouton bouton-secondaire" type="button" id="bouton-annuler-placer">Annuler</button>
+        </div>
+      </form>
+    </dialog>
     <p class="annonce" id="annonce" role="status"></p>
   </main>
 

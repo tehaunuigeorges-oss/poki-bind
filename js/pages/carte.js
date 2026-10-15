@@ -2,7 +2,7 @@
 // informations, prix Cardmarket de la variante choisie et sa courbe.
 
 import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, getSerie, ErreurTcgdex } from "../tcgdex.js";
-import { getCarteDeCollection, ajouterCarte, retirerCarte } from "../donnees.js";
+import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte } from "../donnees.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
 
@@ -226,6 +226,43 @@ function afficherMessage(titre, texte, { erreur = false, reessayer = false } = {
     </div>`;
 }
 
+// ---------- Placer dans un binder libre ----------
+// (les binders de set se remplissent tout seuls avec la collection)
+
+const fenetrePlacer = document.getElementById("fenetre-placer");
+const choixBinders = document.getElementById("choix-binders");
+const boutonPlacer = document.getElementById("bouton-placer");
+
+async function ouvrirFenetrePlacer() {
+  const { libres } = await getBinders();
+  boutonPlacer.hidden = libres.length === 0;
+  choixBinders.innerHTML = libres.length
+    ? `<fieldset class="liste-choix"><legend class="sr-only">Binder</legend>${libres.map((binder, rang) => `
+        <label class="case"><input type="radio" name="binder" value="${echapper(binder.id)}"${rang === 0 ? " checked" : ""}>
+          <span>${echapper(binder.nom)} <small>· ${binder.cartes.length} ${binder.cartes.length > 1 ? "cartes" : "carte"}</small></span></label>`).join("")}
+      </fieldset>
+      <p class="champ-aide"><a href="binders.html?nouveau">Créer un autre binder</a></p>`
+    : `<p>Tu n'as pas encore de binder libre.</p><p><a class="bouton bouton-petit" href="binders.html?nouveau">Créer un binder</a></p>`;
+  fenetrePlacer.showModal();
+}
+
+document.getElementById("formulaire-placer").addEventListener("submit", async (evenement) => {
+  evenement.preventDefault();
+  const choix = fenetrePlacer.querySelector("input[name=binder]:checked");
+  if (!choix) return;
+  const nom = choix.closest("label").querySelector("span").firstChild.textContent.trim();
+  try {
+    const position = await placerCarte(choix.value, resumeCarte(carte));
+    fenetrePlacer.close();
+    annoncer(`${carte.name} est dans « ${nom} », page ${Math.floor(position / 9) + 1}.`);
+  } catch (erreur) {
+    fenetrePlacer.close();
+    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+  }
+  document.getElementById("bouton-binder").focus();
+});
+document.getElementById("bouton-annuler-placer").addEventListener("click", () => fenetrePlacer.close());
+
 // ---------- Actions ----------
 
 async function changerQuantite(cle, difference) {
@@ -261,7 +298,7 @@ zone.addEventListener("click", (evenement) => {
   else if (ajouter) changerQuantite(ajouter, 1);
   else if (retirer) changerQuantite(retirer, -1);
   else if (bouton.id === "bouton-ajouter") changerQuantite(choisie, 1);
-  else if (bouton.id === "bouton-binder") annoncer("Ranger une carte dans un binder arrive à l'étape 6.");
+  else if (bouton.id === "bouton-binder") ouvrirFenetrePlacer();
   else if (bouton.id === "bouton-chase") annoncer("Les chase cards arrivent à l'étape 8.");
   else if (bouton.id === "bouton-reessayer") charger();
 });
