@@ -1762,6 +1762,7 @@ body.dark { --serie-cartes: #5A8FD0; --serie-scelle: #D46A3C; }
 .banniere { height: clamp(110px, 24vw, 230px); }
 .profil-haut { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 18px; }
 .avatar-profil {
+  position: relative;
   display: grid;
   place-items: center;
   width: clamp(88px, 22vw, 132px);
@@ -1777,6 +1778,7 @@ body.dark { --serie-cartes: #5A8FD0; --serie-scelle: #D46A3C; }
 }
 /* Cadre d'avatar en miniature (choix du cadre, boutique) */
 .mini-avatar {
+  position: relative;
   display: block;
   width: 40px;
   aspect-ratio: 1;
@@ -1898,30 +1900,29 @@ body.dark { --serie-cartes: #5A8FD0; --serie-scelle: #D46A3C; }
 
 /* ---------- 23. Boutique (boutique.html) ---------- */
 
-.bientot {
-  display: grid;
-  gap: 28px;
-  align-items: center;
-  padding: clamp(22px, 5vw, 56px);
+.boutique-tete { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.solde-boutique {
+  gap: 10px;
+  padding: 10px 18px;
   border: 1px solid var(--line);
-  border-radius: var(--rayon-l);
+  border-radius: 999px;
   background: var(--surface);
+  font-family: var(--font-titre);
+  font-size: 22px;
 }
-@media (min-width: 900px) {
-  .bientot { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-}
-.bientot-texte { display: grid; gap: 14px; justify-items: start; }
-.bientot-texte h1 { font-size: clamp(30px, 6vw, 44px); }
-.bientot-texte > p:not(.pilule) { max-width: 46ch; color: var(--muted); }
-.bientot-pilule { background: var(--bg); color: var(--ink); }
-.point { width: 8px; height: 8px; border-radius: 50%; background: var(--electrique); }
-.solde { color: var(--ink) !important; }
-.prevenir { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; max-width: 420px; }
-.prevenir .champ { flex: 1 1 200px; width: auto; }
-.bientot-objets { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 18px; margin: 0; padding: 0; list-style: none; }
-.bientot-objets li { display: grid; gap: 6px; font-size: 14px; }
-.objet-couverture { width: 130px; aspect-ratio: 8 / 11; border-radius: 4px 10px 10px 4px; object-fit: cover; box-shadow: 0 8px 18px rgb(20 22 30 / .18); }
-/* Aperçus des cadres (anneau autour d'un faux avatar) et des bannières */
+
+.grille-objets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 24px 16px; margin: 0; padding: 0; list-style: none; }
+.grille-bannieres { grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.objet { display: grid; align-content: start; gap: 4px; }
+.objet > :first-child { margin-bottom: 8px; }
+.objet .bouton, .objet .pilule { justify-self: start; margin-top: 6px; }
+.objet-rond { justify-items: center; text-align: center; }
+.objet-rond .bouton, .objet-rond .pilule { justify-self: center; }
+.objet-manque { font-size: 12px; color: var(--muted); }
+.objet .couverture { width: 100%; }
+
+/* Aperçus : bannière, faux avatar dans son cadre */
+.objet-banniere { display: block; width: 100%; aspect-ratio: 16 / 6; border-radius: var(--rayon-s); box-shadow: 0 6px 14px rgb(20 22 30 / .15); }
 .objet-cadre {
   position: relative;
   display: grid;
@@ -1930,25 +1931,20 @@ body.dark { --serie-cartes: #5A8FD0; --serie-scelle: #D46A3C; }
   aspect-ratio: 1;
   border: 8px solid transparent;
   border-radius: 50%;
-  background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--cadre) border-box;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--cadre) border-box;
 }
-.objet-cadre.grand { width: 130px; border-width: 9px; }
 .objet-cadre-centre { font-size: 12px; color: var(--muted); }
-.objet-banniere { position: relative; display: block; width: 100%; height: 64px; border-radius: var(--rayon-s); box-shadow: 0 6px 14px rgb(20 22 30 / .15); }
-.objet-banniere.vedette { width: 150px; height: 54px; }
-.grille-objets { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px 16px; margin: 0; padding: 0; list-style: none; }
-.objet { display: grid; align-content: start; gap: 4px; }
-.objet > :first-child { margin-bottom: 6px; }
-.objet-rond { justify-items: center; text-align: center; }
-.objet .cadenas { color: #FFF; }
-.objet-cadre .cadenas { color: var(--muted); }
-.objet-cadre:has(.cadenas) .objet-cadre-centre { display: none; }
+.objet-rond > .objet-cadre { margin: 22px 0 14px; }
+.achat-apercu { display: grid; place-items: center; padding: 26px 10px 16px; border-radius: var(--rayon-m); background: var(--surface); }
+.achat-apercu .objet-banniere { max-width: 360px; }
+.achat-apercu .couverture { width: 120px; }
 .apercu-cadre .cadenas { color: var(--ink); }
+
+/* Cadre en image (img/cadres/) posé par-dessus l'avatar : position calculée dans js/objets-profil.js */
+.cadre-en-image { position: relative; border-color: transparent; }
+.cadre-image { position: absolute; z-index: 1; max-width: none; height: auto; pointer-events: none; }
+body.dark .cadre-image { filter: drop-shadow(0 0 1px rgb(255 255 255 / .35)); }
 
 .gains { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
 .gains .panneau { gap: 6px; }
 .gains p { font-size: 14px; color: var(--muted); }
-.couverture-a-venir { display: grid; gap: 4px; }
-.couverture-a-venir .couverture { position: relative; margin-bottom: 6px; }
-.couverture-a-venir .couverture img { filter: grayscale(.4) brightness(.75); }
-.couverture-a-venir .cadenas svg { width: 30px; height: 30px; }

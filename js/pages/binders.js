@@ -182,7 +182,7 @@ function choixCouvertures(selection) {
     return `<label class="choix${libre ? "" : " verrouille"}"${choix.type === "couleur" ? ` style="--teinte: var(--${choix.couleur})"` : ""}>
         <input type="radio" name="couverture" value="${choix.id}"${choix.id === selection ? " checked" : ""}${libre ? "" : " disabled"}>
         <span class="choix-apercu ${choix.type}">${apercu}${libre ? "" : '<span class="cadenas" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>'}</span>
-        <span class="choix-nom">${choix.nom}${libre ? "" : `<small>${choix.prix} pièces, bientôt dans la boutique</small>`}</span>
+        <span class="choix-nom">${choix.nom}${libre ? "" : `<small>${choix.prix} pièces, à débloquer dans la boutique</small>`}</span>
       </label>`;
   }).join("");
 }

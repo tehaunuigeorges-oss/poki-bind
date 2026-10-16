@@ -316,9 +316,23 @@ export async function getCouverturesDebloquees() {
   return lire("couvertures", []);
 }
 
-// Bannières et cadres de profil débloqués dans la boutique (aucun tant qu'elle n'est pas ouverte).
+// Bannières et cadres de profil débloqués dans la boutique.
 export async function getObjetsDebloques() {
   return lire("objets", []);
+}
+
+// Achat dans la boutique. categorie : "couvertures" (binders) ou "objets" (bannières, cadres).
+// Renvoie { ok: true, pieces } ; { ok: false, raison: "deja" | "pieces", pieces } si l'achat est impossible.
+export async function acheterObjet({ categorie, id, nom, prix }) {
+  const recompenses = await getRecompenses();
+  const debloques = lire(categorie, []);
+  if (debloques.includes(id)) return { ok: false, raison: "deja", pieces: recompenses.pieces };
+  if (recompenses.pieces < prix) return { ok: false, raison: "pieces", pieces: recompenses.pieces };
+  recompenses.pieces -= prix;
+  recompenses.journal.push({ date: new Date().toISOString(), cle: `achat:${id}`, texte: nom, pieces: -prix });
+  ecrire(categorie, [...debloques, id]);
+  await enregistrerRecompenses(recompenses);
+  return { ok: true, pieces: recompenses.pieces };
 }
 
 // ---------- Scellé (étape 9) ----------

@@ -7,7 +7,7 @@ import { getSession, getProfil, enregistrerProfil, getRecompenses, getCollection
   getBinders, getChaseCards, seDeconnecter, supprimerMesDonnees, getObjetsDebloques } from "../donnees.js";
 import { BADGES, mesures, prochainsBadges, setsCompletes, verifierRecompenses } from "../recompenses.js";
 import { couverture } from "../couvertures.js";
-import { BANNIERES, CADRES, banniere, cadre, estDebloque } from "../objets-profil.js";
+import { BANNIERES, CADRES, banniere, cadre, estDebloque, avecCadre } from "../objets-profil.js";
 import { imageCarte } from "../tcgdex.js";
 import { echapper, formaterNombre, formaterPrix, initiales, annoncer } from "../outils.js";
 
@@ -31,7 +31,7 @@ let debloques = []; // bannières et cadres débloqués dans la boutique
 
 // Un objet verrouillé (pas encore acheté) n'est jamais affiché : on revient à l'objet de base.
 const fondBanniere = (id) => (estDebloque(banniere(id), debloques) ? banniere(id) : BANNIERES[0]).fond;
-const anneauCadre = (id) => (estDebloque(cadre(id), debloques) ? cadre(id) : CADRES[0]).anneau;
+const cadreAffiche = (id) => (estDebloque(cadre(id), debloques) ? cadre(id) : CADRES[0]);
 const CADENAS = '<span class="cadenas" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
 
 function ilYA(date) {
@@ -86,6 +86,11 @@ function activite() {
       <div class="activite-cartes">${miniCarte(carte)}</div>` });
   }
   for (const ligne of recompenses.journal) {
+    if (ligne.cle?.startsWith("achat:")) {
+      evenements.push({ date: ligne.date, html: `<p>a débloqué <b>${echapper(ligne.texte)}</b> dans la boutique.</p>
+        <span class="activite-badge"><img class="image-badge" src="img/badges/piece.webp" alt="" width="40" height="40"><span><b>Achat</b><small>${formaterNombre(ligne.pieces)} pièces</small></span></span>` });
+      continue;
+    }
     const badge = BADGES.find((b) => b.cle === ligne.cle);
     const encart = badge
       ? `<span class="activite-badge">${imageBadge(badge)}<span><b>${echapper(badge.nom)}</b><small>${ligne.pieces ? `+${formaterNombre(ligne.pieces)} pièces` : "Badge"}</small></span></span>`
@@ -170,7 +175,7 @@ function afficherProfil() {
     <section class="profil-principal" aria-labelledby="nom-profil">
       <div class="banniere" style="background: ${fondBanniere(profil.banniere)}"></div>
       <div class="profil-haut">
-        <span class="avatar-profil" style="--cadre: ${anneauCadre(profil.cadre)}" aria-hidden="true">${echapper(initiales(profil.nom) || "?")}</span>
+        ${avecCadre(cadreAffiche(profil.cadre), echapper(initiales(profil.nom) || "?"), "avatar-profil", ' aria-hidden="true"')}
         <div class="boutons profil-actions">
           <button class="bouton bouton-secondaire bouton-petit" type="button" disabled title="Le partage par lien arrive plus tard">Partager</button>
           <button class="bouton bouton-secondaire bouton-petit" type="button" id="modifier-profil">Modifier le profil</button>
@@ -277,7 +282,7 @@ function choixObjets(objets, selection, nom, apercu) {
     return `<label class="choix${libre ? "" : " verrouille"}">
       <input type="radio" name="${nom}" value="${objet.id}"${objet.id === selection && libre ? " checked" : ""}${libre ? "" : " disabled"}>
       ${apercu(objet)}${libre ? "" : CADENAS}</span>
-      <span class="choix-nom">${objet.nom}${libre ? "" : `<small>${objet.prix} pièces, bientôt dans la boutique</small>`}</span>
+      <span class="choix-nom">${objet.nom}${libre ? "" : `<small>${objet.prix} pièces, à débloquer dans la boutique</small>`}</span>
     </label>`;
   }).join("");
 }
@@ -285,7 +290,7 @@ function choixObjets(objets, selection, nom, apercu) {
 const choixBannieres = (selection, nom) => choixObjets(BANNIERES, selection, nom,
   (objet) => `<span class="choix-apercu" style="background: ${objet.fond}">`);
 const choixCadres = (selection, nom) => choixObjets(CADRES, selection, nom,
-  (objet) => `<span class="choix-apercu apercu-cadre"><span class="mini-avatar" style="--cadre: ${objet.anneau}"></span>`);
+  (objet) => `<span class="choix-apercu apercu-cadre">${avecCadre(objet, "", "mini-avatar")}`);
 
 // Vérifie nom et pseudo ; renvoie le premier champ invalide, ou null
 function verifier(champNom, erreurNom, champPseudo, erreurPseudo) {

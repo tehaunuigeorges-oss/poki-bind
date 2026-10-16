@@ -1,65 +1,125 @@
-// Boutique « bientôt disponible » : tes pièces, des exemples d'objets à venir, comment gagner des pièces,
-// et les couvertures illustrées qui seront à débloquer. Rien ne s'achète encore.
+// Boutique : débloquer des bannières, des cadres et des couvertures de binders avec ses pièces.
+// Un objet débloqué reste acquis ; il se choisit ensuite dans le profil ou dans les réglages d'un binder.
 
-import { getPieces, getSession } from "../donnees.js";
+import { getPieces, getObjetsDebloques, getCouverturesDebloquees, acheterObjet } from "../donnees.js";
 import { BADGES, GAINS, verifierRecompenses } from "../recompenses.js";
 import { COUVERTURES } from "../couvertures.js";
-import { BANNIERES, CADRES, estGratuit } from "../objets-profil.js";
-import { formaterNombre } from "../outils.js";
+import { BANNIERES, CADRES, estGratuit, avecCadre } from "../objets-profil.js";
+import { echapper, formaterNombre, annoncer } from "../outils.js";
 
-const pluriel = (nombre, mot) => `${formaterNombre(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;
+const fenetre = document.getElementById("fenetre-achat");
+const pluriel = (nombre, mot) => `${formaterNombre(nombre)} ${mot}${Math.abs(nombre) > 1 ? "s" : ""}`;
 const piecesBadge = (cle) => BADGES.find((badge) => badge.cle === cle)?.pieces ?? 0;
+const PIECE = (taille) => `<img src="img/badges/piece.webp" alt="" width="${taille}" height="${taille}">`;
 
-await verifierRecompenses().catch(() => null);
-document.getElementById("solde").textContent = `Tu as déjà ${pluriel(await getPieces(), "pièce")}`;
+let pieces = 0;
+let objetsDebloques = [];
+let couverturesDebloquees = [];
+let enCours = null; // objet en cours d'achat
 
-const gains = [
+// Tous les objets à vendre, avec leur rayon et leur aperçu
+const RAYONS = {
+  bannieres: BANNIERES.filter((b) => !estGratuit(b)).map((b) => ({ ...b, categorie: "objets", rayon: "bannieres",
+    apercu: () => `<span class="objet-banniere" style="background: ${b.fond}"></span>` })),
+  cadres: CADRES.filter((c) => !estGratuit(c)).map((c) => ({ ...c, categorie: "objets", rayon: "cadres",
+    apercu: () => avecCadre(c, '<span class="objet-cadre-centre">Avatar</span>', "objet-cadre") })),
+  couvertures: COUVERTURES.filter((c) => c.type === "illustre").map((c) => ({ ...c, categorie: "couvertures", rayon: "couvertures",
+    apercu: () => `<span class="couverture illustree"><img src="${c.image}-couverture.webp" alt="" loading="lazy"></span>` })),
+};
+const tous = () => Object.values(RAYONS).flat();
+const estAchete = (objet) => (objet.categorie === "objets" ? objetsDebloques : couverturesDebloquees).includes(objet.id);
+
+function tuile(objet) {
+  const achete = estAchete(objet);
+  const manque = objet.prix - pieces;
+  const action = achete
+    ? '<span class="pilule bonne">Débloqué</span>'
+    : `<button class="bouton bouton-petit${manque > 0 ? " bouton-secondaire" : ""}" type="button" data-acheter="${echapper(objet.id)}"${manque > 0 ? ' aria-disabled="true"' : ""}
+        aria-label="Débloquer ${echapper(objet.nom)} pour ${objet.prix} pièces">Débloquer</button>`;
+  return `<li class="objet${objet.rayon === "cadres" ? " objet-rond" : ""}${achete ? " achete" : ""}">
+      ${objet.apercu()}
+      <span class="binder-nom">${echapper(objet.nom)}</span>
+      <span class="binder-infos avec-illustration num">${PIECE(14)}${formaterNombre(objet.prix)} pièces</span>
+      ${!achete && manque > 0 ? `<span class="objet-manque num">Il te manque ${pluriel(manque, "pièce")}</span>` : ""}
+      ${action}
+    </li>`;
+}
+
+function afficher() {
+  document.getElementById("solde").textContent = pluriel(pieces, "pièce");
+  // Le compteur de l'en-tête suit le solde
+  const compteur = document.querySelector(".entete .pieces");
+  if (compteur) {
+    compteur.querySelector("span").textContent = formaterNombre(pieces);
+    compteur.setAttribute("aria-label", `${pluriel(pieces, "pièce")}, voir la boutique`);
+  }
+  document.getElementById("liste-bannieres").innerHTML = RAYONS.bannieres.map(tuile).join("");
+  document.getElementById("liste-cadres").innerHTML = RAYONS.cadres.map(tuile).join("");
+  document.getElementById("liste-couvertures").innerHTML = RAYONS.couvertures.map(tuile).join("");
+}
+
+// ---------- Rayons ----------
+
+document.getElementById("rayons").addEventListener("click", (evenement) => {
+  const bouton = evenement.target.closest("button[data-rayon]");
+  if (!bouton) return;
+  for (const b of document.querySelectorAll("#rayons button")) b.setAttribute("aria-pressed", String(b === bouton));
+  for (const rayon of document.querySelectorAll(".rayon")) rayon.hidden = Boolean(bouton.dataset.rayon) && rayon.id !== `rayon-${bouton.dataset.rayon}`;
+});
+
+// ---------- Achat ----------
+
+document.getElementById("contenu").addEventListener("click", (evenement) => {
+  const bouton = evenement.target.closest("[data-acheter]");
+  if (!bouton) return;
+  const objet = tous().find((o) => o.id === bouton.dataset.acheter);
+  if (bouton.getAttribute("aria-disabled") === "true") {
+    annoncer(`Il te manque ${pluriel(objet.prix - pieces, "pièce")} pour débloquer ${objet.nom}.`);
+    return;
+  }
+  enCours = objet;
+  document.getElementById("titre-achat").textContent = `Débloquer « ${objet.nom} » ?`;
+  document.getElementById("achat-apercu").innerHTML = objet.apercu();
+  document.getElementById("achat-texte").textContent = `Prix : ${pluriel(objet.prix, "pièce")}. Il te restera ${pluriel(pieces - objet.prix, "pièce")}.`;
+  fenetre.showModal();
+  document.getElementById("confirmer-achat").focus();
+});
+
+fenetre.addEventListener("close", async () => {
+  const objet = enCours;
+  enCours = null;
+  if (!objet || fenetre.returnValue !== "oui") return;
+  let resultat;
+  try {
+    resultat = await acheterObjet({ categorie: objet.categorie, id: objet.id, nom: objet.nom, prix: objet.prix });
+  } catch (erreur) {
+    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    return;
+  }
+  pieces = resultat.pieces;
+  if (resultat.ok) {
+    (objet.categorie === "objets" ? objetsDebloques : couverturesDebloquees).push(objet.id);
+    const ou = objet.categorie === "objets" ? "« Modifier le profil »" : "les réglages de tes binders";
+    annoncer(`${objet.nom} est débloqué : choisis-le dans ${ou}.`);
+  } else {
+    annoncer(resultat.raison === "deja" ? `${objet.nom} est déjà débloqué.` : `Il te manque des pièces pour débloquer ${objet.nom}.`);
+  }
+  afficher();
+  document.getElementById("titre-boutique").setAttribute("tabindex", "-1");
+  document.getElementById("titre-boutique").focus({ preventScroll: true });
+});
+
+// ---------- Comment gagner des pièces ----------
+
+document.getElementById("gains").innerHTML = [
   ["Connexion quotidienne", `+${GAINS.connexion} pièces par jour, plus ${piecesBadge("connexion-7")} pièces au bout de 7 jours d'affilée et ${piecesBadge("connexion-30")} au bout de 30 jours`],
   ["Ajout de cartes", `+${piecesBadge("cartes-10")} pièces à 10, 50, 100 et 500 cartes, +${piecesBadge("cartes-1000")} à 1 000`],
   ["Set complété", `+${GAINS.setComplete} pièces pour chaque set terminé, +${piecesBadge("sets-5")} au 5ᵉ`],
   ["Binders et chase cards", `+${piecesBadge("premier-binder")} pièces pour ton premier binder et ta première chase card`],
-];
-document.getElementById("gains").innerHTML = gains.map(([titre, texte]) => `<li class="panneau"><h3>${titre}</h3><p>${texte}</p></li>`).join("");
+].map(([titre, texte]) => `<li class="panneau"><h3>${titre}</h3><p>${texte}</p></li>`).join("");
 
-document.getElementById("couvertures-a-venir").innerHTML = COUVERTURES.filter((c) => c.type === "illustre").map((c) => `<li class="couverture-a-venir">
-    <span class="couverture illustree"><img src="${c.image}-couverture.webp" alt="" loading="lazy"><span class="cadenas" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span></span>
-    <span class="binder-nom">${c.nom}</span>
-    <span class="binder-infos avec-illustration num"><img src="img/badges/piece.webp" alt="" width="14" height="14">${formaterNombre(c.prix)} pièces · verrouillée</span>
-  </li>`).join("");
+// ---------- Chargement ----------
 
-// Bannières et cadres de profil (seuls ceux de la boutique, pas les gratuits)
-const CADENAS = '<span class="cadenas" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
-const prix = (objet) => `<span class="binder-infos avec-illustration num"><img src="img/badges/piece.webp" alt="" width="14" height="14">${formaterNombre(objet.prix)} pièces · verrouillé</span>`;
-const apercuBanniere = (objet) => `<span class="objet-banniere" style="background: ${objet.fond}">${CADENAS}</span>`;
-const apercuCadre = (objet) => `<span class="objet-cadre" style="--cadre: ${objet.anneau}"><span class="objet-cadre-centre">Avatar</span>${CADENAS}</span>`;
-
-document.getElementById("bannieres-a-venir").innerHTML = BANNIERES.filter((b) => !estGratuit(b))
-  .map((b) => `<li class="objet">${apercuBanniere(b)}<span class="binder-nom">${b.nom}</span>${prix(b)}</li>`).join("");
-document.getElementById("cadres-a-venir").innerHTML = CADRES.filter((c) => !estGratuit(c))
-  .map((c) => `<li class="objet objet-rond">${apercuCadre(c)}<span class="binder-nom">${c.nom}</span>${prix(c)}</li>`).join("");
-
-// En haut : une couverture, un cadre et une bannière en vedette
-const vitrail = COUVERTURES.find((c) => c.id === "vitrail");
-const dore = CADRES.find((c) => c.id === "dore");
-const aurore = BANNIERES.find((b) => b.id === "aurore");
-const prixVedette = (objet) => `<span class="avec-illustration num"><img src="img/badges/piece.webp" alt="" width="16" height="16">${formaterNombre(objet.prix)} pièces</span>`;
-document.getElementById("objets-vedette").innerHTML = `
-  <li><img class="objet-couverture" src="${vitrail.image}-couverture.webp" alt="" loading="lazy"><span>Couverture ${vitrail.nom}</span>${prixVedette(vitrail)}</li>
-  <li><span class="objet-cadre grand" style="--cadre: ${dore.anneau}" aria-hidden="true"><span class="objet-cadre-centre">Avatar</span></span><span>${dore.nom}</span>${prixVedette(dore)}</li>
-  <li><span class="objet-banniere vedette" style="background: ${aurore.fond}" aria-hidden="true"></span><span>Bannière ${aurore.nom}</span>${prixVedette(aurore)}</li>`;
-
-// « Me prévenir » : rien n'est envoyé en v1 ; l'email sera utilisé avec les vrais comptes.
-const champ = document.getElementById("email-prevenir");
-const message = document.getElementById("message-prevenir");
-champ.value = (await getSession())?.email ?? "";
-document.getElementById("formulaire-prevenir").addEventListener("submit", (evenement) => {
-  evenement.preventDefault();
-  if (!champ.value.trim() || !champ.checkValidity()) {
-    champ.setAttribute("aria-invalid", "true");
-    message.textContent = "Entre une adresse email valide.";
-    champ.focus();
-    return;
-  }
-  champ.removeAttribute("aria-invalid");
-  message.textContent = "C'est noté ! Version de test : rien n'est envoyé, l'alerte par email arrivera avec les vrais comptes.";
-});
+await verifierRecompenses().catch(() => null);
+[pieces, objetsDebloques, couverturesDebloquees] = await Promise.all([getPieces(), getObjetsDebloques(), getCouverturesDebloquees()]);
+afficher();

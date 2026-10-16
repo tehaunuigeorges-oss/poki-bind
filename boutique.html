@@ -24,20 +24,34 @@
   <header class="entete" id="entete"></header>
 
   <main class="wrap" id="contenu">
-    <section class="bientot" aria-labelledby="titre-boutique">
-      <div class="bientot-texte">
-        <p class="pilule bientot-pilule"><span class="point" aria-hidden="true"></span> Bientôt disponible</p>
-        <h1 id="titre-boutique">La boutique arrive</h1>
-        <p>Tu pourras dépenser tes pièces pour débloquer des couvertures de binders, des cadres de profil et des bannières. Continue à remplir ta collection : tes pièces t'attendront.</p>
-        <p class="avec-illustration solde num"><img src="img/badges/piece.webp" alt="" width="20" height="20"><span id="solde">Tu as déjà 0 pièce</span></p>
-        <form class="prevenir" id="formulaire-prevenir" novalidate>
-          <label class="sr-only" for="email-prevenir">Ton email</label>
-          <input class="champ" id="email-prevenir" type="email" autocomplete="email" placeholder="ton@email.fr" aria-describedby="message-prevenir">
-          <button class="bouton" type="submit">Me prévenir</button>
-        </form>
-        <p class="champ-aide" id="message-prevenir" role="status"></p>
+    <section class="boutique-tete" aria-labelledby="titre-boutique">
+      <div class="tete-page">
+        <h1 id="titre-boutique">Boutique</h1>
+        <p>Dépense tes pièces pour débloquer des bannières et des cadres pour ton profil, et des couvertures pour tes binders.</p>
       </div>
-      <ul class="bientot-objets" id="objets-vedette" aria-label="Exemples d'objets à venir"></ul>
+      <p class="solde-boutique avec-illustration num"><img src="img/badges/piece.webp" alt="" width="28" height="28"><span id="solde">0 pièce</span></p>
+    </section>
+
+    <div class="puces" id="rayons" role="group" aria-label="Rayon">
+      <button type="button" data-rayon="" aria-pressed="true">Tout</button>
+      <button type="button" data-rayon="bannieres" aria-pressed="false">Bannières</button>
+      <button type="button" data-rayon="cadres" aria-pressed="false">Cadres</button>
+      <button type="button" data-rayon="couvertures" aria-pressed="false">Couvertures de binders</button>
+    </div>
+
+    <section class="section rayon" id="rayon-bannieres" aria-labelledby="titre-bannieres">
+      <h2 id="titre-bannieres">Bannières de profil</h2>
+      <ul class="grille-objets grille-bannieres" id="liste-bannieres"></ul>
+    </section>
+
+    <section class="section rayon" id="rayon-cadres" aria-labelledby="titre-cadres">
+      <h2 id="titre-cadres">Cadres d'avatar</h2>
+      <ul class="grille-objets" id="liste-cadres"></ul>
+    </section>
+
+    <section class="section rayon" id="rayon-couvertures" aria-labelledby="titre-couvertures">
+      <h2 id="titre-couvertures">Couvertures de binders</h2>
+      <ul class="grille-objets" id="liste-couvertures"></ul>
     </section>
 
     <section class="section" aria-labelledby="titre-gagner">
@@ -45,22 +59,20 @@
       <ul class="gains" id="gains"></ul>
     </section>
 
-    <section class="section" aria-labelledby="titre-bannieres">
-      <h2 id="titre-bannieres">Bannières de profil</h2>
-      <ul class="grille-objets" id="bannieres-a-venir"></ul>
-    </section>
+    <dialog class="fenetre" id="fenetre-achat" aria-labelledby="titre-achat">
+      <form class="formulaire" id="formulaire-achat" method="dialog">
+        <h2 id="titre-achat">Débloquer cet objet ?</h2>
+        <div class="achat-apercu" id="achat-apercu"></div>
+        <p id="achat-texte"></p>
+        <div class="boutons">
+          <button class="bouton" type="submit" value="oui" id="confirmer-achat">Débloquer</button>
+          <button class="bouton bouton-secondaire" type="submit" value="non">Annuler</button>
+        </div>
+      </form>
+    </dialog>
 
-    <section class="section" aria-labelledby="titre-cadres">
-      <h2 id="titre-cadres">Cadres d'avatar</h2>
-      <ul class="grille-objets" id="cadres-a-venir"></ul>
-    </section>
-
-    <section class="section" aria-labelledby="titre-couvertures">
-      <h2 id="titre-couvertures">Couvertures de binders à venir</h2>
-      <ul class="etagere" id="couvertures-a-venir"></ul>
-    </section>
-
-    <p class="note-page">Montants provisoires, à fixer à l'ouverture de la boutique.</p>
+    <p class="note-page">Prix provisoires. Une fois débloqué, un objet reste à toi : choisis-le dans « Modifier le profil » (bannières et cadres) ou dans les réglages d'un binder (couvertures).</p>
+    <p class="annonce" id="annonce" role="status"></p>
   </main>
 
   <footer class="pied" id="pied"></footer>
