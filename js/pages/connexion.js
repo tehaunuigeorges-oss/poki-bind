@@ -244,4 +244,8 @@ if (erreurAdresse) {
 } else if (etat === "connecte") {
   // Déjà connecté (ou retour du lien de confirmation, de Google) : on ouvre la page demandée
   location.replace(adresseDeRetour());
+} else if (parametres.get("confirme")) {
+  // Lien ouvert dans un autre navigateur : l'adresse est confirmée, mais la session reste à ouvrir
+  informer("Ton adresse est confirmée. Connecte-toi pour continuer.");
+  champEmail.focus();
 }
