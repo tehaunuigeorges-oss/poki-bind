@@ -20,16 +20,17 @@ La connexion est une façade pour l'instant : n'importe quel email, mot de passe
 |---|---|
 | `index.html` | Accueil |
 | `a-propos.html` | Présentation du site |
-| `connexion.html` | Connexion et création de compte (façade) |
+| `connexion.html` | Connexion et création de compte (email ou Google) |
 | `collection.html` | Ma collection : valeur, sets possédés |
 | `set.html?id=…` | Toutes les cartes d'un set, possédées ou en gris |
 | `recherche.html` | Recherche de cartes, et parcours par famille et par set |
 | `carte.html?id=…` | Fiche d'une carte : variantes, prix, binder, chase card, favorite |
 | `binders.html` | Binders libres, pochettes au choix |
 | `statistiques.html` | Valeur et composition de la collection |
-| `chase-cards.html` | Cartes recherchées, prix max, budget |
+| `chase-cards.html` | Cartes recherchées, prix max, budget, alertes par email |
 | `scelle.html` | Produits scellés, ajoutés à la main |
-| `profil.html` | Profil, activité, badges, compte |
+| `profil.html` | Profil, activité, badges, visibilité, amis, compte |
+| `joueur.html?u=…` | Profil partagé d'un joueur (Amis ou Public) : profil et binders |
 | `boutique.html` | Bannières, cadres et couvertures à débloquer avec les pièces |
 | `mentions-legales.html` | Mentions légales, conditions, confidentialité |
 | `404.html` | Page introuvable (servie automatiquement par Netlify) |
@@ -40,7 +41,7 @@ La connexion est une façade pour l'instant : n'importe quel email, mot de passe
 *.html                 une page par écran (voir le tableau)
 css/style.css          tout le style : palette (:root), mode sombre (body.dark), puis une section par page
 js/entete.js           en-tête, navigation, pied de page, accès réservé aux membres
-js/donnees.js          toutes les données de l'utilisateur (localStorage aujourd'hui, Supabase demain)
+js/donnees.js          toutes les données de l'utilisateur (Supabase)
 js/tcgdex.js           API TCGdex : cartes, sets, séries, variantes, prix, cache du navigateur
 js/recompenses.js      pièces et badges (montants provisoires)
 js/couvertures.js      couvertures de binders (couleurs et illustrations)
@@ -65,13 +66,13 @@ img/partage/           image-de-partage.png (1200 x 630, aperçu des liens)
 
 ## Données
 
-- **Utilisateur** : tout passe par `js/donnees.js`. Ses fonctions sont asynchrones, pour pouvoir brancher Supabase plus tard sans changer les pages. Aujourd'hui, tout est gardé dans le navigateur, sous des clés qui commencent par `pokibind-`.
+- **Utilisateur** : tout passe par `js/donnees.js`, qui lit et écrit dans Supabase. Les données de la première version, gardées dans le navigateur (clés `pokibind-…`), sont proposées une fois à l'import à la connexion.
 - **Cartes** : [TCGdex](https://tcgdex.dev), en français. Les listes de cartes sont gardées une semaine dans le cache du navigateur, le détail d'une carte un jour. La recherche se fait dans le navigateur, sans tenir compte des accents.
 - **Prix** : tendance Cardmarket fournie par TCGdex. Pokibind ne donne aucun prix pour le scellé : l'utilisateur saisit les siens.
 
-## Base de données Supabase (en cours)
+## Base de données Supabase
 
-Les vrais comptes arrivent par étapes. Le fichier `supabase/schema.sql` crée les tables, les règles d'accès et les fonctions.
+Le fichier `supabase/schema.sql` crée les tables, les règles d'accès et les fonctions.
 Pour l'installer : dans Supabase, ouvrir **SQL Editor**, coller tout le fichier, puis **Run**. Il peut être relancé sans perdre de données.
 
 Sécurité :
@@ -81,6 +82,15 @@ Sécurité :
 - pièces, badges et achats calculés par la base ; les prix de la boutique sont dans la table `objets_boutique` ;
 - le site n'utilise que la clé publique (anon / publishable) ; **la clé « service_role » ou « secret » ne doit jamais être dans le code** ;
 - `_headers` : en-têtes de sécurité envoyés par Netlify (CSP, cadres interdits…) ; `_redirects` : le dossier `supabase/` n'est pas servi.
+
+## Alertes email des chase cards
+
+Une fois par jour, la fonction `supabase/functions/alertes-chase` vérifie les prix des chase cards des personnes qui ont activé les alertes, et envoie un email avec Brevo quand une carte passe sous le prix max.
+
+1. Dans Supabase, **Edge Functions** → **Deploy a new function** → **Via Editor** : nom `alertes-chase`, coller `index.ts`, déployer. Dans ses réglages, désactiver **Verify JWT** (l'appel est protégé par un secret).
+2. **Database** → **Extensions** : activer `pg_cron` et `pg_net`.
+3. **SQL Editor** : lancer `supabase/alertes.sql` (crée un secret au hasard et programme l'appel quotidien).
+4. **Edge Functions** → **Secrets** : `BREVO_API_KEY` (clé API Brevo), `EXPEDITEUR` (adresse validée dans Brevo) et `ALERTES_SECRET` (valeur donnée par `select decrypted_secret from vault.decrypted_secrets where name = 'alertes_secret';`).
 
 ## Ajouter des objets à la boutique
 

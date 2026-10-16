@@ -2,7 +2,7 @@
 // et ton budget. Une carte sous ton prix max est une « bonne affaire » ; une carte entrée dans la
 // collection passe en « Trouvées ». Les prix de plus d'un jour sont remis à jour depuis TCGdex.
 
-import { getChaseCards, modifierChaseCard, retirerChaseCard, choisirBudgetChase, getCollection, PRIORITES } from "../donnees.js";
+import { getChaseCards, modifierChaseCard, retirerChaseCard, choisirBudgetChase, choisirAlertesEmail, getCollection, PRIORITES } from "../donnees.js";
 import { getCarte, variantesDeCarte, imageCarte, VARIANTES } from "../tcgdex.js";
 import { echapper, formaterNombre, formaterPrix, annoncer } from "../outils.js";
 
@@ -219,11 +219,27 @@ async function mettreAJourLesPrix() {
     : "Prix mis à jour.";
 }
 
+// ---------- Alertes par email ----------
+
+const caseAlertes = document.getElementById("alertes-email");
+caseAlertes.addEventListener("change", async () => {
+  const actives = caseAlertes.checked;
+  try {
+    await choisirAlertesEmail(actives);
+  } catch (erreur) {
+    caseAlertes.checked = !actives;
+    annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
+    return;
+  }
+  annoncer(actives ? "Alertes par email activées." : "Alertes par email désactivées.");
+});
+
 // ---------- Chargement ----------
 
 const [chase, collection] = await Promise.all([getChaseCards(), getCollection()]);
 cartes = chase.cartes;
 budget = chase.budget;
+caseAlertes.checked = chase.alertes;
 possedees = new Set(collection.map((entree) => entree.id));
 afficher();
 await mettreAJourLesPrix();

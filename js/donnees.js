@@ -487,7 +487,7 @@ export async function enregistrerValeur({ cartes, scelle }) {
 }
 
 // ---------- Chase cards ----------
-// chase : { budget: nombre ou null, cartes: [{ id, nom, numero, image, set, langue, variante,
+// chase : { budget: nombre ou null, alertes: true si les alertes email sont actives, cartes: [{ id, nom, numero, image, set, langue, variante,
 //           prixMax, priorite: "haute" | "moyenne" | "basse", prix, prixLe, ajouteeLe }] }
 // « prix » : dernière tendance Cardmarket connue de la variante cherchée (null si inconnue).
 // Une chase card est « trouvée » dès que la carte est dans la collection.
@@ -515,9 +515,19 @@ export async function getChaseCards() {
   const utilisateur = await moi();
   const [lignes, reglages] = await Promise.all([
     requete(supabase.from("chase_cards").select("*").eq("user_id", utilisateur).order("ajoutee_le")),
-    requete(supabase.from("reglages").select("budget").eq("user_id", utilisateur).maybeSingle()),
+    requete(supabase.from("reglages").select("budget, alertes_email").eq("user_id", utilisateur).maybeSingle()),
   ]);
-  return { budget: reglages?.budget === null || reglages?.budget === undefined ? null : Number(reglages.budget), cartes: lignes.map(versChase) };
+  return {
+    budget: reglages?.budget === null || reglages?.budget === undefined ? null : Number(reglages.budget),
+    alertes: reglages?.alertes_email ?? false,
+    cartes: lignes.map(versChase),
+  };
+}
+
+// Alertes email : une fois par jour, Pokibind écrit quand une chase card passe sous son prix max
+// (fonction supabase/functions/alertes-chase).
+export async function choisirAlertesEmail(actives) {
+  await requete(supabase.from("reglages").upsert({ user_id: await moi(), alertes_email: Boolean(actives) }));
 }
 
 export async function getChaseCard(id) {
