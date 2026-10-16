@@ -3,6 +3,8 @@
 // Plus tard, ces mêmes fonctions liront et écriront dans Supabase.
 // Elles sont déjà asynchrones (à utiliser avec await) : les pages n'auront pas à changer.
 
+import { etatSession, deconnecter } from "./compte.js";
+
 const PREFIXE = "pokibind-";
 
 function lire(cle, valeurParDefaut) {
@@ -19,48 +21,36 @@ function ecrire(cle, valeur) {
   localStorage.setItem(PREFIXE + cle, JSON.stringify(valeur));
 }
 
-// ---------- Session (façade en v1 : aucun mot de passe n'est vérifié ni enregistré) ----------
-// « Rester connecté » coché : la session est gardée dans localStorage (elle survit à la fermeture
-// du navigateur) ; sinon dans sessionStorage (elle disparaît quand on ferme le navigateur).
+// ---------- Session (comptes Supabase, voir js/compte.js) ----------
+// Les données restent encore dans le navigateur ; elles passeront dans Supabase à l'étape suivante.
 
-const CLE_SESSION = PREFIXE + "session";
-
-function lireSession() {
-  for (const stockage of ["localStorage", "sessionStorage"]) {
-    try {
-      const texte = window[stockage].getItem(CLE_SESSION);
-      if (texte) return JSON.parse(texte);
-    } catch (erreur) {
-      // Stockage bloqué (navigation privée…) : on essaie le suivant.
-    }
-  }
-  return null;
-}
-
+// Connecté ET double authentification passée : seul état qui ouvre l'espace membre.
 export async function estConnecte() {
-  return lireSession() !== null;
-}
-
-// Lève une erreur si le navigateur refuse d'enregistrer (stockage bloqué).
-export async function seConnecter({ email = "", pseudo = "", resterConnecte = true } = {}) {
-  const session = { email, pseudo, connecteLe: new Date().toISOString() };
-  window[resterConnecte ? "localStorage" : "sessionStorage"].setItem(CLE_SESSION, JSON.stringify(session));
-  return session;
-}
-
-export async function seDeconnecter() {
-  for (const stockage of ["localStorage", "sessionStorage"]) {
-    try {
-      window[stockage].removeItem(CLE_SESSION);
-    } catch (erreur) {
-      // Rien à effacer dans ce stockage.
-    }
+  try {
+    return (await etatSession()).etat === "verifie";
+  } catch (erreur) {
+    return false;
   }
 }
 
-// La session en cours (email et pseudo saisis à la connexion), ou null.
+// La session en cours (email et pseudo choisis à l'inscription), ou null.
 export async function getSession() {
-  return lireSession();
+  try {
+    const { etat, utilisateur } = await etatSession();
+    if (etat === "deconnecte") return null;
+    return { email: utilisateur.email ?? "", pseudo: utilisateur.user_metadata?.pseudo ?? "" };
+  } catch (erreur) {
+    return null;
+  }
+}
+
+// tous : déconnecte aussi les autres appareils
+export async function seDeconnecter(tous = false) {
+  try {
+    await deconnecter(tous);
+  } catch (erreur) {
+    // Hors connexion : la session locale est quand même effacée par Supabase.
+  }
 }
 
 // ---------- Profil ----------

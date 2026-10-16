@@ -61,7 +61,7 @@
               <label for="mot-de-passe">Mot de passe</label>
               <input class="champ" id="mot-de-passe" name="mot-de-passe" type="password" autocomplete="current-password"
                      placeholder="••••••••" aria-describedby="erreur-mot-de-passe">
-              <p class="champ-aide" id="aide-mot-de-passe" data-pour="inscription" hidden>8 caractères minimum, avec au moins un chiffre.</p>
+              <p class="champ-aide" id="aide-mot-de-passe" data-pour="inscription" hidden>10 caractères minimum, avec des lettres et des chiffres.</p>
               <p class="champ-erreur" id="erreur-mot-de-passe"></p>
             </div>
 
@@ -86,10 +86,23 @@
           <p class="auth-bas" data-pour="inscription" hidden>Déjà un compte ? <button class="lien" type="button" data-choix-mode="connexion">Se connecter</button></p>
         </div>
 
-        <!-- Étape 2 : code de sécurité (double authentification) -->
+        <!-- Étape 2 : code de sécurité (double authentification par application) -->
         <form class="auth-etape" id="etape-code" novalidate hidden>
-          <h2>Vérifie que c'est bien toi</h2>
-          <p class="auth-sous-titre">Entre le code à 6 chiffres affiché dans ton application d'authentification.</p>
+          <h2 id="titre-code">Vérifie que c'est bien toi</h2>
+          <p class="auth-sous-titre" id="texte-code">Entre le code à 6 chiffres affiché dans ton application d'authentification.</p>
+          <!-- Première connexion : lier une application (Google Authenticator, Microsoft Authenticator, 2FAS…) -->
+          <div class="activation" id="activation" hidden>
+            <ol class="activation-etapes">
+              <li>Installe une application d'authentification sur ton téléphone, par exemple Google Authenticator, Microsoft Authenticator ou 2FAS.</li>
+              <li>Dans l'application, ajoute un compte en scannant ce QR code.</li>
+              <li>Entre ci-dessous le code à 6 chiffres qu'elle affiche.</li>
+            </ol>
+            <img class="activation-qr" id="activation-qr" alt="QR code à scanner avec ton application d'authentification" width="180" height="180">
+            <details class="activation-cle">
+              <summary>Impossible de scanner ? Saisir la clé à la main</summary>
+              <p class="num" id="activation-cle"></p>
+            </details>
+          </div>
           <fieldset class="code">
             <legend class="sr-only">Code de sécurité à 6 chiffres</legend>
             <input type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="Chiffre 1 sur 6" aria-describedby="erreur-code">
@@ -101,13 +114,35 @@
           </fieldset>
           <p class="champ-erreur" id="erreur-code"></p>
           <button class="bouton bouton-large" type="submit">Valider</button>
-          <p class="auth-bas">Pas accès à ton application ? <button class="lien" type="button" id="bouton-secours">Utiliser un code de secours</button></p>
-          <p class="auth-info" id="info-code" role="status"></p>
-          <button class="lien auth-retour" type="button" id="bouton-retour">← Retour</button>
+          <details class="aide-code">
+            <summary>Téléphone perdu ou changé ?</summary>
+            <p>Pour ta sécurité, il n'existe pas de code de secours. Demande à l'administrateur de Pokibind de réinitialiser ta double authentification : tu pourras alors lier ton nouveau téléphone.</p>
+          </details>
+          <button class="lien auth-retour" type="button" id="bouton-retour">← Se déconnecter</button>
+        </form>
+
+        <!-- Message : email envoyé (inscription, mot de passe oublié) -->
+        <div class="auth-etape" id="etape-message" hidden>
+          <h2 id="titre-message">Vérifie ta boîte mail</h2>
+          <p class="auth-sous-titre" id="texte-message"></p>
+          <p class="auth-bas">Pense à regarder dans les indésirables. Ouvre le lien dans ce même navigateur.</p>
+          <button class="lien auth-retour" type="button" data-choix-mode="connexion">← Retour à la connexion</button>
+        </div>
+
+        <!-- Nouveau mot de passe (lien « mot de passe oublié » reçu par email) -->
+        <form class="auth-etape formulaire" id="etape-nouveau" novalidate hidden>
+          <h2>Choisis un nouveau mot de passe</h2>
+          <div class="champ-groupe">
+            <label for="nouveau-mot-de-passe">Nouveau mot de passe</label>
+            <input class="champ" id="nouveau-mot-de-passe" type="password" autocomplete="new-password" aria-describedby="aide-nouveau erreur-nouveau">
+            <p class="champ-aide" id="aide-nouveau">10 caractères minimum, avec des lettres et des chiffres.</p>
+            <p class="champ-erreur" id="erreur-nouveau"></p>
+          </div>
+          <button class="bouton bouton-large" type="submit">Enregistrer</button>
         </form>
       </div>
 
-      <p class="note-auth">Version de test : ton compte reste dans ce navigateur, rien n'est envoyé.</p>
+      <p class="note-auth">Connexion sécurisée : la double authentification par application est obligatoire pour protéger ta collection.</p>
     </div>
   </main>
 

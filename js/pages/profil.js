@@ -235,6 +235,7 @@ function afficherProfil() {
       <section class="panneau" aria-labelledby="titre-compte">
         <h2 id="titre-compte">Mon compte</h2>
         <button class="bouton bouton-secondaire bouton-petit" type="button" id="bouton-deconnexion">Se déconnecter</button>
+        <button class="lien" type="button" id="bouton-deconnexion-tous">Se déconnecter de tous les appareils</button>
         <button class="lien lien-danger" type="button" id="bouton-supprimer">Supprimer mes données</button>
       </section>
     </aside>
@@ -409,8 +410,9 @@ zone.addEventListener("click", async (evenement) => {
     afficherOnglet();
   } else if (bouton.id === "modifier-profil") {
     ouvrirModification();
-  } else if (bouton.id === "bouton-deconnexion") {
-    await seDeconnecter();
+  } else if (bouton.id === "bouton-deconnexion" || bouton.id === "bouton-deconnexion-tous") {
+    // « tous les appareils » : utile après un oubli de déconnexion sur un autre ordinateur
+    await seDeconnecter(bouton.id === "bouton-deconnexion-tous");
     location.href = "index.html";
   } else if (bouton.id === "bouton-supprimer") {
     const ok = confirm("Supprimer toutes tes données Pokibind ?\n\nTa collection, tes binders, tes chase cards, ton scellé, ton profil, tes pièces et tes badges seront effacés de ce navigateur. C'est définitif.");

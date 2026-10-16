@@ -5,9 +5,8 @@
 #   - connexions : le site, TCGdex (cartes) et Supabase (comptes et données) ;
 #   - images : le site et les images des cartes TCGdex ;
 #   - le site ne peut pas être affiché dans un cadre d'un autre site (frame-ancestors).
-# Supabase : remplacer *.supabase.co par l'adresse exacte du projet une fois connue.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-mZbRdS36arj2ntcjIq/1RLomNzZfw3duFr6TBJwbnX4='; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://assets.tcgdex.net data:; connect-src 'self' https://api.tcgdex.net https://*.supabase.co wss://*.supabase.co; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-mZbRdS36arj2ntcjIq/1RLomNzZfw3duFr6TBJwbnX4='; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://assets.tcgdex.net data:; connect-src 'self' https://api.tcgdex.net https://wjnqmdkfyvmndnwsxpul.supabase.co; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
