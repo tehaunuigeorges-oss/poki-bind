@@ -1985,3 +1985,23 @@ body.dark .cadre-image { filter: drop-shadow(0 0 1px rgb(255 255 255 / .35)); }
 /* ---------- 25. Connexion : bouton occupé pendant une requête ---------- */
 
 button[aria-busy="true"] { cursor: progress; opacity: .6; }
+
+/* ---------- 26. Partage : amis et profil partagé (joueur.html) ---------- */
+
+.ajout-ami { display: flex; gap: 8px; }
+.ajout-ami .champ { flex: 1; min-width: 0; }
+.titre-amis { margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.liste-amis { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.liste-amis li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.liste-amis li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.liste-amis small { color: var(--muted); }
+.liste-amis .boutons { gap: 12px; align-items: center; }
+.titre-joueur { padding: 18px 18px 0; font-size: 18px; }
+.binder-partage { display: grid; gap: 12px; padding: 18px; border-bottom: 1px solid var(--line); }
+.binder-partage:last-child { border-bottom: 0; }
+.binder-partage-tete { display: flex; align-items: center; gap: 12px; }
+.binder-partage-tete .activite-couverture { width: 56px; flex: none; }
+.binder-partage-tete span { display: grid; }
+.binder-partage-tete small { font-size: 13px; color: var(--muted); }
+.cartes-partagees { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+.cartes-partagees .mini-carte.grande { width: 100%; height: auto; aspect-ratio: 245 / 337; }

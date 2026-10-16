@@ -1,10 +1,11 @@
 // Mon profil. À la première visite : création du profil (pseudo, nom affiché, bio, bannière).
 // Ensuite : bannière, avatar, nom, badge mis en avant, bio, chiffres, et quatre onglets (activité,
-// binders, badges, chase cards) ; à côté, les prochains badges, les cartes favorites, la visibilité
-// et le compte (déconnexion, suppression des données).
+// binders, badges, chase cards) ; à côté, les prochains badges, les cartes favorites,
+// la visibilité (Privé, Amis, Public), les amis et le compte (déconnexion).
 
 import { getSession, getProfil, enregistrerProfil, getRecompenses, getCollection, nombreExemplaires,
-  getBinders, getChaseCards, seDeconnecter, getObjetsDebloques, ErreurPseudoPris } from "../donnees.js";
+  getBinders, getChaseCards, seDeconnecter, getObjetsDebloques, ErreurPseudoPris,
+  getAmities, demanderAmi, accepterAmi, retirerAmi } from "../donnees.js";
 import { BADGES, mesures, prochainsBadges, setsCompletes, verifierRecompenses } from "../recompenses.js";
 import { couverture } from "../couvertures.js";
 import { BANNIERES, CADRES, banniere, cadre, estDebloque, avecCadre } from "../objets-profil.js";
@@ -26,6 +27,7 @@ let valeurs = null;
 let collection = [];
 let binders = [];
 let chase = [];
+let amities = []; // amis et demandes en cours
 let onglet = "activite";
 let debloques = []; // bannières et cadres débloqués dans la boutique
 
@@ -167,6 +169,76 @@ function afficherOnglet() {
   panneau.innerHTML = contenu();
 }
 
+// ---------- Visibilité et amis ----------
+
+const VISIBILITES = [
+  ["prive", "Privé", "Seul toi vois ton profil."],
+  ["amis", "Amis", "Tes amis voient ton profil et tes binders. Ta collection, ton scellé et tes chase cards restent privés."],
+  ["public", "Public", "Toute personne qui a le lien voit ton profil et tes binders. Ta collection, ton scellé et tes chase cards restent privés."],
+];
+const lienProfil = (pseudo) => `joueur.html?u=${encodeURIComponent(pseudo)}`;
+
+function listeAmis() {
+  const groupe = (titre, liste, actions) => (liste.length ? `<h3 class="titre-amis">${titre}</h3><ul class="liste-amis">${liste.map((ami) => `<li>
+      <span><b>${echapper(ami.nom)}</b> <small>@${echapper(ami.pseudo)}</small></span>
+      <span class="boutons">${actions(ami)}</span>
+    </li>`).join("")}</ul>` : "");
+  const retirer = (ami, texte) => `<button class="lien" type="button" data-retirer="${echapper(ami.id)}" data-nom="${echapper(ami.nom)}">${texte}</button>`;
+  return groupe("Demandes reçues", amities.filter((a) => a.statut === "attente" && a.recue),
+      (ami) => `<button class="bouton bouton-petit" type="button" data-accepter="${echapper(ami.id)}">Accepter</button>${retirer(ami, "Refuser")}`)
+    + groupe("Mes amis", amities.filter((a) => a.statut === "acceptee"),
+      (ami) => `<a class="lien" href="${lienProfil(ami.pseudo)}">Voir</a>${retirer(ami, "Retirer")}`)
+    + groupe("Demandes envoyées", amities.filter((a) => a.statut === "attente" && !a.recue), (ami) => retirer(ami, "Annuler"))
+    || '<p class="aide-resultats">Ajoute un ami avec son pseudo : quand il accepte, vous voyez vos profils « Amis ».</p>';
+}
+
+async function rechargerAmis(message = "") {
+  amities = await getAmities();
+  document.getElementById("liste-amis").innerHTML = listeAmis();
+  document.getElementById("info-ami").textContent = message;
+}
+
+const REPONSES_AMI = {
+  envoyee: "Demande envoyée.",
+  acceptee: "Vous êtes maintenant amis.",
+  deja: "Vous êtes déjà amis, ou une demande est en cours.",
+  introuvable: "Aucun profil avec ce pseudo.",
+  soi: "C'est ton propre pseudo.",
+};
+
+zone.addEventListener("submit", async (evenement) => {
+  if (evenement.target.id !== "formulaire-ami") return;
+  evenement.preventDefault();
+  const champ = document.getElementById("champ-ami");
+  const pseudo = champ.value.trim();
+  if (!PSEUDO.test(pseudo)) {
+    document.getElementById("info-ami").textContent = "Entre un pseudo valide (2 à 20 caractères).";
+    champ.focus();
+    return;
+  }
+  try {
+    const reponse = await demanderAmi(pseudo);
+    if (reponse === "envoyee" || reponse === "acceptee") champ.value = "";
+    await rechargerAmis(REPONSES_AMI[reponse] ?? "");
+  } catch (erreur) {
+    document.getElementById("info-ami").textContent = "Impossible d'envoyer la demande : vérifie ta connexion internet.";
+  }
+});
+
+async function partager() {
+  const adresse = new URL(lienProfil(profil.pseudo), location.href).href;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: `${profil.nom} sur Pokibind`, url: adresse });
+      return;
+    }
+    await navigator.clipboard.writeText(adresse);
+    annoncer(`Lien copié : ${adresse}`);
+  } catch (erreur) {
+    if (erreur.name !== "AbortError") annoncer(`Lien de ton profil : ${adresse}`);
+  }
+}
+
 // ---------- Profil ----------
 
 function afficherProfil() {
@@ -182,7 +254,7 @@ function afficherProfil() {
       <div class="profil-haut">
         ${avecCadre(cadreAffiche(profil.cadre), echapper(initiales(profil.nom) || "?"), "avatar-profil", ' aria-hidden="true"')}
         <div class="boutons profil-actions">
-          <button class="bouton bouton-secondaire bouton-petit" type="button" disabled title="Le partage par lien arrive plus tard">Partager</button>
+          <button class="bouton bouton-secondaire bouton-petit" type="button" id="bouton-partager"${profil.visibilite === "prive" ? ' disabled title="Choisis « Amis » ou « Public » pour partager ton profil"' : ""}>Partager</button>
           <button class="bouton bouton-secondaire bouton-petit" type="button" id="modifier-profil">Modifier le profil</button>
         </div>
       </div>
@@ -226,11 +298,19 @@ function afficherProfil() {
       <section class="panneau" aria-labelledby="titre-visibilite">
         <h2 id="titre-visibilite">Visibilité</h2>
         <div class="segments" role="group" aria-labelledby="titre-visibilite">
-          <button type="button" aria-pressed="true">Privé</button>
-          <button type="button" aria-pressed="false" disabled>Amis</button>
-          <button type="button" aria-pressed="false" disabled>Public</button>
+          ${VISIBILITES.map(([cle, nom]) => `<button type="button" data-visibilite="${cle}" aria-pressed="${profil.visibilite === cle}">${nom}</button>`).join("")}
         </div>
-        <p class="aide-resultats">Pour l'instant, seul toi vois ton profil. Le partage par lien est prévu plus tard.</p>
+        <p class="aide-resultats">${VISIBILITES.find(([cle]) => cle === profil.visibilite)?.[2] ?? ""}</p>
+      </section>
+      <section class="panneau" aria-labelledby="titre-amis">
+        <h2 id="titre-amis">Amis</h2>
+        <form class="ajout-ami" id="formulaire-ami" novalidate>
+          <label class="sr-only" for="champ-ami">Pseudo de la personne à ajouter</label>
+          <input class="champ" id="champ-ami" maxlength="20" autocomplete="off" spellcheck="false" placeholder="Pseudo à ajouter">
+          <button class="bouton bouton-petit" type="submit">Ajouter</button>
+        </form>
+        <p class="aide-resultats" id="info-ami" role="status"></p>
+        <div id="liste-amis">${listeAmis()}</div>
       </section>
       <section class="panneau" aria-labelledby="titre-compte">
         <h2 id="titre-compte">Mon compte</h2>
@@ -430,6 +510,30 @@ zone.addEventListener("click", async (evenement) => {
     afficherOnglet();
   } else if (bouton.id === "modifier-profil") {
     ouvrirModification();
+  } else if (bouton.id === "bouton-partager") {
+    partager();
+  } else if (bouton.dataset.visibilite && bouton.dataset.visibilite !== profil.visibilite) {
+    try {
+      profil = await enregistrerProfil({ visibilite: bouton.dataset.visibilite });
+    } catch (erreur) {
+      annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
+      return;
+    }
+    afficherProfil();
+    zone.querySelector(`[data-visibilite="${profil.visibilite}"]`).focus();
+    annoncer(`Visibilité : ${VISIBILITES.find(([cle]) => cle === profil.visibilite)[1]}.`);
+  } else if (bouton.dataset.accepter || bouton.dataset.retirer) {
+    if (bouton.dataset.retirer && amities.some((a) => a.id === bouton.dataset.retirer && a.statut === "acceptee")
+      && !confirm(`Retirer ${bouton.dataset.nom} de tes amis ?`)) return;
+    try {
+      if (bouton.dataset.accepter) await accepterAmi(bouton.dataset.accepter);
+      else await retirerAmi(bouton.dataset.retirer);
+      await rechargerAmis(bouton.dataset.accepter ? "Demande acceptée." : "C'est fait.");
+    } catch (erreur) {
+      annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
+      return;
+    }
+    document.getElementById("champ-ami").focus();
   } else if (bouton.id === "bouton-deconnexion" || bouton.id === "bouton-deconnexion-tous") {
     // « tous les appareils » : utile après un oubli de déconnexion sur un autre ordinateur
     await seDeconnecter(bouton.id === "bouton-deconnexion-tous");
@@ -455,8 +559,8 @@ zone.addEventListener("keydown", (evenement) => {
 await verifierRecompenses().catch(() => null);
 debloques = await getObjetsDebloques(); // connexion du jour et badges comptés avant l'affichage
 let chase_;
-[profil, recompenses, collection, { libres: binders }, chase_] = await Promise.all([
-  getProfil(), getRecompenses(), getCollection(), getBinders(), getChaseCards(),
+[profil, recompenses, collection, { libres: binders }, chase_, amities] = await Promise.all([
+  getProfil(), getRecompenses(), getCollection(), getBinders(), getChaseCards(), getAmities(),
 ]);
 chase = chase_.cartes;
 valeurs = await mesures(recompenses);

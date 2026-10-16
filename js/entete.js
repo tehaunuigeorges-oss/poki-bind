@@ -43,7 +43,7 @@ const logo = (href, texte) =>
 function enteteVisiteur(connecte) {
   const marque = page === "accueil" ? "" : logo("index.html", "Pokibind, retour à l'accueil");
   let bouton = "";
-  if (page === "a-propos") {
+  if (page === "a-propos" || page === "joueur") {
     bouton = connecte
       ? '<a class="bouton bouton-petit" href="collection.html">Ma collection</a>'
       : '<a class="bouton bouton-petit" href="connexion.html">Se connecter</a>';

@@ -144,6 +144,43 @@ export async function enregistrerProfil(profil) {
   return versProfil(data);
 }
 
+// ---------- Partage et amis ----------
+// Visibilité du profil : "prive" (moi seul), "amis" (mes amis acceptés), "public" (toute personne avec le lien).
+// Les autres ne voient que le profil (nom, pseudo, bio, bannière, cadre, badge, favorites) et les binders :
+// jamais la collection, le scellé, les chase cards, les pièces ni l'email.
+
+// Profil partagé d'un autre joueur (page joueur.html), ou null s'il est privé ou n'existe pas.
+// Fonctionne aussi sans être connecté (profils publics). Renvoie { id, profil, binders, moi: true si c'est le mien }.
+export async function getProfilPartage(pseudo) {
+  const ligne = await requete(supabase.from("profils").select("id, pseudo, nom, bio, banniere, cadre, badge, favorites, visibilite, cree_le")
+    .eq("pseudo", pseudo).maybeSingle());
+  if (!ligne) return null;
+  const binders = await requete(supabase.from("binders").select("id, nom, couverture, cartes, cree_le").eq("user_id", ligne.id).order("cree_le"));
+  const { data } = await supabase.auth.getSession();
+  return { id: ligne.id, profil: versProfil(ligne), binders: binders.map(versBinder), moi: data.session?.user.id === ligne.id };
+}
+
+// [{ id, pseudo, nom, statut: "attente" | "acceptee", recue: true si la demande vient de l'autre }]
+export async function getAmities() {
+  return requete(supabase.rpc("mes_amities"));
+}
+
+// Renvoie "envoyee", "acceptee" (l'autre m'avait déjà demandé), "deja", "introuvable" ou "soi".
+export async function demanderAmi(pseudo) {
+  return requete(supabase.rpc("demander_ami", { recherche: pseudo }));
+}
+
+export async function accepterAmi(id) {
+  await requete(supabase.from("amities").update({ statut: "acceptee" }).eq("demandeur", id).eq("destinataire", await moi()));
+}
+
+// Retire un ami, refuse une demande reçue ou annule une demande envoyée.
+export async function retirerAmi(id) {
+  const utilisateur = await moi();
+  await requete(supabase.from("amities").delete().eq("demandeur", utilisateur).eq("destinataire", id));
+  await requete(supabase.from("amities").delete().eq("demandeur", id).eq("destinataire", utilisateur));
+}
+
 // ---------- Pièces et récompenses ----------
 // recompenses : { pieces, serie, meilleureSerie, obtenus: { cle: date }, journal: [{ date, cle, texte, pieces }] }
 // Les gains sont calculés par la base (fonction verifier_recompenses) ; les montants affichés sont dans js/recompenses.js.

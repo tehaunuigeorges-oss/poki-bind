@@ -487,8 +487,55 @@ as $$
   limit 1;
 $$;
 
+-- Mes amis et demandes : pseudo et nom de l'autre personne, même si son profil est privé
+-- (seulement pour les personnes avec qui une demande existe)
+create or replace function public.mes_amities()
+returns table (id uuid, pseudo text, nom text, statut text, recue boolean)
+language sql stable security definer
+set search_path = ''
+as $$
+  select p.id, p.pseudo, p.nom, a.statut, a.destinataire = public.moi()
+  from public.amities a
+  join public.profils p on p.id = case when a.demandeur = public.moi() then a.destinataire else a.demandeur end
+  where public.moi() in (a.demandeur, a.destinataire)
+  order by lower(p.pseudo);
+$$;
+
+-- Demande d'ami par pseudo. Si l'autre personne m'avait déjà fait une demande, elle est acceptée.
+-- Renvoie 'envoyee', 'acceptee', 'deja' (déjà amis ou demande en cours), 'introuvable' ou 'soi'.
+create or replace function public.demander_ami(recherche text)
+returns text
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  utilisateur uuid := public.moi();
+  autre uuid;
+begin
+  if utilisateur is null then
+    raise exception 'session non vérifiée' using errcode = '42501';
+  end if;
+  select p.id into autre from public.profils p where lower(p.pseudo) = lower(recherche);
+  if autre is null then return 'introuvable'; end if;
+  if autre = utilisateur then return 'soi'; end if;
+  if exists (select 1 from public.amities where demandeur = autre and destinataire = utilisateur and statut = 'attente') then
+    update public.amities set statut = 'acceptee' where demandeur = autre and destinataire = utilisateur;
+    return 'acceptee';
+  end if;
+  if exists (select 1 from public.amities where (demandeur = utilisateur and destinataire = autre) or (demandeur = autre and destinataire = utilisateur)) then
+    return 'deja';
+  end if;
+  insert into public.amities (demandeur, destinataire) values (utilisateur, autre);
+  return 'envoyee';
+end;
+$$;
+
+-- Postgres donne par défaut le droit d'exécuter toute nouvelle fonction à tout le monde (PUBLIC) :
+-- on le retire, puis on le rend aux seules personnes connectées.
+revoke all on function public.verifier_recompenses(), public.acheter_objet(text), public.supprimer_mon_compte(),
+  public.chercher_pseudo(text), public.mes_amities(), public.demander_ami(text) from public, anon;
 grant execute on function public.verifier_recompenses(), public.acheter_objet(text),
-  public.supprimer_mon_compte(), public.chercher_pseudo(text) to authenticated;
+  public.supprimer_mon_compte(), public.chercher_pseudo(text), public.mes_amities(), public.demander_ami(text) to authenticated;
 
 -- =============================================================================
 -- Catalogue de la boutique (prix provisoires, identiques à js/objets-profil.js et js/couvertures.js)
