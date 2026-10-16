@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/scelle.js"></script>
 </head>
 <body data-page="scelle" data-espace="membre">
   <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
@@ -23,10 +24,111 @@
   <header class="entete" id="entete"></header>
 
   <main class="wrap" id="contenu">
-    <div class="tete-page">
-      <h1>Ma collection scellée</h1>
-      <p>Cette page arrive à l'étape 9.</p>
+    <div class="tete-page tete-avec-action">
+      <div class="tete-page">
+        <h1>Ma collection</h1>
+        <p>Tes produits jamais ouverts : boosters, displays, tripacks, coffrets Dresseur d'Élite, coffrets et Pokébox.</p>
+      </div>
+      <button class="bouton" type="button" id="bouton-ajouter"><span aria-hidden="true">+</span> Ajouter un produit</button>
     </div>
+
+    <nav class="onglets" aria-label="Partie de la collection">
+      <a href="collection.html">Cartes <span class="num" id="onglet-cartes"></span></a>
+      <a href="scelle.html" aria-current="page">Scellé <span class="num" id="onglet-scelle"></span></a>
+    </nav>
+
+    <div class="bandeau-alerte" role="note">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="14.2" r="1.1" fill="currentColor"/></svg>
+      <div>
+        <p><b>Pokibind ne donne aucun prix de revente pour les produits scellés.</b></p>
+        <p>Tu peux entrer ta propre estimation pour chaque produit : elle sera ajoutée à la valeur de ta collection.</p>
+      </div>
+    </div>
+
+    <section class="kpis kpis-3" aria-label="Résumé">
+      <div class="kpi">
+        <p class="surtitre">Produits</p>
+        <p class="chiffre num" id="kpi-produits">0</p>
+        <p class="kpi-detail" id="kpi-produits-detail"></p>
+      </div>
+      <div class="kpi">
+        <p class="surtitre">Prix d'achat total</p>
+        <p class="chiffre num" id="kpi-achat">—</p>
+        <p class="kpi-detail">ce que tu as payé</p>
+      </div>
+      <div class="kpi">
+        <p class="surtitre">Valeur scellé</p>
+        <p class="chiffre num" id="kpi-valeur">—</p>
+        <p class="kpi-detail" id="kpi-valeur-detail"></p>
+      </div>
+    </section>
+
+    <div class="puces" id="filtre-types" role="group" aria-label="Type de produit"></div>
+
+    <ul class="grille-scelle" id="grille-scelle"></ul>
+    <div class="encart" id="scelle-vide" hidden>
+      <h2>Aucun produit scellé pour l'instant</h2>
+      <p>Ajoute tes displays, coffrets et boosters jamais ouverts, avec ton prix d'achat et ta revente estimée.</p>
+      <button class="bouton bouton-petit" type="button" id="bouton-ajouter-vide">Ajouter un produit</button>
+    </div>
+
+    <p class="note-page">Produits français uniquement, sans photo pour l'instant. La liste vient du catalogue d'une boutique française, complétée par le booster et le display de chaque extension : si un produit manque, ajoute-le à la main. Le prix d'achat et la revente estimée sont ceux que tu saisis.</p>
+
+    <dialog class="fenetre fenetre-large" id="fenetre-ajout" aria-labelledby="titre-ajout">
+      <div class="fenetre-tete">
+        <h2 id="titre-ajout">Ajouter un produit scellé</h2>
+        <button class="bouton-icone" type="button" id="fermer-ajout" aria-label="Fermer">×</button>
+      </div>
+      <form class="recherche-scelle" id="recherche-scelle" role="search" novalidate>
+        <label class="sr-only" for="requete-scelle">Nom du produit</label>
+        <input class="champ" id="requete-scelle" type="search" placeholder="Ex. display 151, coffret Dracaufeu…" autocomplete="off" spellcheck="false">
+        <label class="sr-only" for="type-scelle">Type de produit</label>
+        <select class="champ" id="type-scelle"><option value="">Tous les types</option></select>
+      </form>
+      <p class="surtitre num" id="resume-catalogue" role="status"></p>
+      <ul class="liste-catalogue" id="liste-catalogue"></ul>
+      <button class="bouton bouton-secondaire bouton-petit" id="plus-catalogue" type="button" hidden>Voir plus de produits</button>
+      <p class="aide-catalogue">Ton produit n'est pas dans la liste ? <button class="lien" type="button" id="produit-libre">Ajoute-le à la main</button></p>
+    </dialog>
+
+    <dialog class="fenetre" id="fenetre-produit" aria-labelledby="titre-produit">
+      <form class="formulaire" id="formulaire-produit" novalidate>
+        <h2 id="titre-produit">Ton produit</h2>
+        <p class="champ-aide" id="produit-choisi"></p>
+        <div class="champ-groupe" id="groupe-nom-libre">
+          <label for="nom-libre">Nom du produit</label>
+          <input class="champ" id="nom-libre" maxlength="120" autocomplete="off" aria-describedby="erreur-nom-libre">
+          <p class="champ-erreur" id="erreur-nom-libre"></p>
+        </div>
+        <div class="champ-groupe" id="groupe-type-libre">
+          <label for="type-libre">Type</label>
+          <select class="champ" id="type-libre"></select>
+        </div>
+        <div class="champ-groupe">
+          <label for="quantite-produit">Quantité</label>
+          <input class="champ num" id="quantite-produit" type="number" inputmode="numeric" min="1" max="999" step="1" aria-describedby="erreur-quantite">
+          <p class="champ-erreur" id="erreur-quantite"></p>
+        </div>
+        <div class="champs-cote">
+          <div class="champ-groupe">
+            <label for="achat-produit">Prix d'achat (€ / pièce)</label>
+            <input class="champ num" id="achat-produit" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="erreur-prix">
+          </div>
+          <div class="champ-groupe">
+            <label for="revente-produit">Ta revente estimée (€ / pièce)</label>
+            <input class="champ num" id="revente-produit" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="erreur-prix">
+          </div>
+        </div>
+        <p class="champ-erreur" id="erreur-prix"></p>
+        <p class="champ-aide">Ta revente estimée compte dans la valeur de ta collection. Laisse vide si tu ne veux pas l'estimer.</p>
+        <div class="boutons">
+          <button class="bouton" type="submit" id="enregistrer-produit">Ajouter</button>
+          <button class="bouton bouton-secondaire" type="button" id="annuler-produit">Annuler</button>
+        </div>
+        <button class="lien lien-danger" type="button" id="retirer-produit" hidden>Retirer ce produit</button>
+      </form>
+    </dialog>
+    <p class="annonce" id="annonce" role="status"></p>
   </main>
 
   <footer class="pied" id="pied"></footer>

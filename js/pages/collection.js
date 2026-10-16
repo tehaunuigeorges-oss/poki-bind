@@ -1,7 +1,7 @@
 // Ma collection : valeur totale, nombre de cartes, et un résumé par set possédé
 // (progression vers le set complet), filtrable par série.
 
-import { getCollection, nombreExemplaires, valeurEntree } from "../donnees.js";
+import { getCollection, nombreExemplaires, valeurEntree, getScelle, valeurScelle } from "../donnees.js";
 import { getIndex, estOfficielle } from "../tcgdex.js";
 import { illustration } from "../visuel-carte.js";
 import { echapper, formaterNombre, formaterPrix, initiales } from "../outils.js";
@@ -17,7 +17,11 @@ let sets = [];
 // ---------- Résumé ----------
 
 const exemplaires = collection.reduce((somme, entree) => somme + nombreExemplaires(entree), 0);
-const valeur = collection.reduce((somme, entree) => somme + valeurEntree(entree), 0);
+// Valeur totale : cartes (prix Cardmarket) + scellé (ta revente estimée)
+const scelle = await getScelle();
+const valeur = collection.reduce((somme, entree) => somme + valeurEntree(entree), 0) + valeurScelle(scelle);
+const produitsScelles = scelle.reduce((somme, produit) => somme + (Number(produit.quantite) || 0), 0);
+document.getElementById("onglet-scelle").textContent = produitsScelles ? formaterNombre(produitsScelles) : "";
 document.getElementById("valeur-totale").textContent = formaterPrix(valeur);
 document.getElementById("nombre-cartes").textContent = formaterNombre(exemplaires);
 document.getElementById("onglet-cartes").textContent = formaterNombre(exemplaires);

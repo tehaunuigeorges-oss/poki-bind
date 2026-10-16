@@ -251,11 +251,35 @@ export async function getCouverturesDebloquees() {
 }
 
 // ---------- Scellé (étape 9) ----------
-// [{ id, nom, quantite, achat, revente }] : prix d'achat et revente estimée, saisis par l'utilisateur.
+// [{ id, nom, type, set, catalogue, quantite, achat, revente, ajouteLe }]
+// nom, type et set viennent du catalogue (js/catalogue-scelle.js) ou sont saisis (produit libre, catalogue "").
+// achat et revente : prix par pièce saisis par l'utilisateur, en euros (null si non renseigné).
+// Pokibind ne donne aucun prix pour le scellé.
 
 export async function getScelle() {
   const scelle = lire("scelle", []);
   return Array.isArray(scelle) ? scelle : [];
+}
+
+export async function ajouterScelle(produit) {
+  const scelle = await getScelle();
+  const nouveau = { ...produit, id: `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, ajouteLe: new Date().toISOString() };
+  scelle.push(nouveau);
+  ecrire("scelle", scelle);
+  return nouveau;
+}
+
+export async function modifierScelle(id, changements) {
+  const scelle = await getScelle();
+  const produit = scelle.find((p) => p.id === id);
+  if (!produit) return null;
+  Object.assign(produit, changements);
+  ecrire("scelle", scelle);
+  return produit;
+}
+
+export async function retirerScelle(id) {
+  ecrire("scelle", (await getScelle()).filter((p) => p.id !== id));
 }
 
 export function valeurScelle(produits) {
