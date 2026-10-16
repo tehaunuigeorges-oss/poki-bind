@@ -5,6 +5,8 @@ Classeur de cartes Pokémon en ligne (HTML/CSS + JavaScript, hébergé sur Netli
 Site statique en HTML, CSS et JavaScript « vanilla » : pas de framework, pas de npm, pas d'étape de build.
 Toutes les pages sont en français, pensées d'abord pour le téléphone, en mode clair et sombre.
 
+En ligne : https://poki-bind.netlify.app
+
 ## Lancer le site en local
 
 Les scripts sont des modules JavaScript : ils ne marchent pas en ouvrant les fichiers directement (`file://`).
@@ -82,3 +84,7 @@ Netlify publie le dossier tel quel, depuis la racine du dépôt, sans commande d
 - Grandes images en .webp, moins de 200 Ko chacune.
 - Images de cartes TCGdex : `low.webp` dans les grilles, `high.webp` en vue détaillée, `loading="lazy"`.
 - Chemins relatifs partout (sauf `404.html`, qui a une balise `<base href="/">`).
+
+## Licence
+
+Le code est sous licence MIT (voir `LICENSE`). Elle ne couvre pas ce qui appartient à d'autres : Pokémon, les images des cartes (TCGdex) et les illustrations des bannières, cadres et couvertures restent à leurs auteurs.
