@@ -251,8 +251,9 @@ export async function getCouverturesDebloquees() {
 }
 
 // ---------- Scellé (étape 9) ----------
-// [{ id, nom, type, serie, quantite, achat, revente, ajouteLe }]
-// Produits ajoutés à la main : nom, type, serie (identifiant TCGdex, "" si non précisée).
+// [{ id, nom, type, serie, set, setNom, quantite, achat, revente, ajouteLe }]
+// Produits ajoutés à la main : nom, type, série et set (identifiants TCGdex, "" si non précisés ; setNom garde
+// le nom du set pour l'afficher sans rappeler TCGdex).
 // achat et revente : prix par pièce saisis par l'utilisateur, en euros (null si non renseigné).
 // Pokibind ne donne aucun prix pour le scellé.
 

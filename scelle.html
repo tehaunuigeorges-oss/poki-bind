@@ -82,14 +82,19 @@
           <input class="champ" id="nom-produit" maxlength="120" autocomplete="off" placeholder="Ex. Display 151" aria-describedby="erreur-nom">
           <p class="champ-erreur" id="erreur-nom"></p>
         </div>
+        <div class="champ-groupe">
+          <label for="type-produit">Type</label>
+          <select class="champ" id="type-produit"></select>
+        </div>
         <div class="champs-cote">
-          <div class="champ-groupe">
-            <label for="type-produit">Type</label>
-            <select class="champ" id="type-produit"></select>
-          </div>
           <div class="champ-groupe">
             <label for="serie-produit">Série</label>
             <select class="champ" id="serie-produit"><option value="">Non précisée</option></select>
+          </div>
+          <div class="champ-groupe">
+            <label for="set-produit">Set</label>
+            <select class="champ" id="set-produit" aria-describedby="aide-set" disabled><option value="">Non précisé</option></select>
+            <p class="champ-aide" id="aide-set">Choisis d'abord la série.</p>
           </div>
         </div>
         <div class="champ-groupe">

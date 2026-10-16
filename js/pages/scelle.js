@@ -1,8 +1,8 @@
 // Ma collection scellée : produits jamais ouverts, ajoutés à la main par l'utilisateur (nom, type,
-// série, quantité, prix d'achat et revente estimée). Pokibind ne propose aucun produit ni aucun prix.
+// série et set, quantité, prix d'achat et revente estimée). Pokibind ne propose aucun produit ni aucun prix.
 
 import { getScelle, ajouterScelle, modifierScelle, retirerScelle, valeurScelle, getCollection, nombreExemplaires, valeurEntree } from "../donnees.js";
-import { getSeries } from "../tcgdex.js";
+import { getSeries, getSerie } from "../tcgdex.js";
 import { echapper, formaterNombre, formaterPrix, annoncer } from "../outils.js";
 
 const TYPES = ["Booster", "Display", "Tripack", "Coffret Dresseur d'Élite", "Coffret", "Pokébox", "Autre"];
@@ -16,12 +16,15 @@ const fenetre = document.getElementById("fenetre-produit");
 const champNom = document.getElementById("nom-produit");
 const champType = document.getElementById("type-produit");
 const champSerie = document.getElementById("serie-produit");
+const champSet = document.getElementById("set-produit");
+const aideSet = document.getElementById("aide-set");
 const champQuantite = document.getElementById("quantite-produit");
 const champAchat = document.getElementById("achat-produit");
 const champRevente = document.getElementById("revente-produit");
 
 let produits = [];
 let series = [];
+const setsDeSerie = new Map(); // id de série → [{ id, nom }], chargés à la demande
 let valeurCartes = 0;
 let typeChoisi = "";
 let enEdition = null; // produit modifié dans la fenêtre (null : ajout)
@@ -41,7 +44,7 @@ function couleur(produit) {
 
 function tuile(produit) {
   const gain = produit.achat != null && produit.revente != null ? (produit.revente - produit.achat) * produit.quantite : null;
-  const details = [produit.type, nomSerie(produit.serie)].filter(Boolean).join(" · ");
+  const details = [produit.type, produit.setNom || nomSerie(produit.serie)].filter(Boolean).join(" · ");
   return `<li class="produit">
       <div class="produit-visuel">
         <span class="pilule num quantite-pilule">× ${formaterNombre(produit.quantite)}</span>
@@ -108,6 +111,35 @@ function remplirSeries(selection) {
   champSerie.value = selection ?? "";
 }
 
+// Sets de la série choisie, du plus récent au plus ancien
+async function remplirSets(idSerie, selection = "") {
+  champSet.innerHTML = '<option value="">Non précisé</option>';
+  champSet.disabled = true;
+  if (!idSerie) {
+    aideSet.textContent = "Choisis d'abord la série.";
+    return;
+  }
+  aideSet.textContent = "Chargement des sets…";
+  try {
+    if (!setsDeSerie.has(idSerie)) {
+      const serie = await getSerie(idSerie);
+      setsDeSerie.set(idSerie, (serie.sets ?? []).map((set) => ({ id: set.id, nom: set.name })).reverse());
+    }
+  } catch (erreur) {
+    aideSet.textContent = "Impossible de charger les sets : vérifie ta connexion internet.";
+    return;
+  }
+  if (champSerie.value !== idSerie) return; // la série a changé entre-temps
+  const sets = setsDeSerie.get(idSerie);
+  champSet.innerHTML = '<option value="">Non précisé</option>'
+    + sets.map((set) => `<option value="${echapper(set.id)}">${echapper(set.nom)}</option>`).join("");
+  champSet.value = sets.some((set) => set.id === selection) ? selection : "";
+  champSet.disabled = false;
+  aideSet.textContent = "";
+}
+
+champSerie.addEventListener("change", () => remplirSets(champSerie.value));
+
 function effacerErreurs() {
   for (const id of ["erreur-nom", "erreur-quantite", "erreur-prix"]) document.getElementById(id).textContent = "";
   for (const champ of [champNom, champQuantite, champAchat, champRevente]) champ.removeAttribute("aria-invalid");
@@ -119,6 +151,7 @@ function ouvrirFenetre(produit = null) {
   champNom.value = produit?.nom ?? "";
   champType.value = TYPES.includes(produit?.type) ? produit.type : "Display";
   remplirSeries(produit?.serie ?? "");
+  remplirSets(produit?.serie ?? "", produit?.set ?? "");
   champQuantite.value = produit?.quantite ?? 1;
   champAchat.value = produit?.achat ?? "";
   champRevente.value = produit?.revente ?? "";
@@ -152,7 +185,14 @@ document.getElementById("formulaire-produit").addEventListener("submit", async (
     premierInvalide.focus();
     return;
   }
-  const donnees = { nom, type: champType.value, serie: champSerie.value, quantite, achat, revente };
+  // Liste des sets pas encore chargée : on garde le set déjà enregistré si la série n'a pas changé
+  const garderSet = champSet.disabled && enEdition && enEdition.serie === champSerie.value;
+  const set = garderSet ? enEdition.set ?? "" : champSet.disabled ? "" : champSet.value;
+  const donnees = {
+    nom, type: champType.value, serie: champSerie.value, set,
+    setNom: garderSet ? enEdition.setNom ?? "" : set ? champSet.selectedOptions[0].textContent : "",
+    quantite, achat, revente,
+  };
   let id;
   try {
     if (enEdition) {
