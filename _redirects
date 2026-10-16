@@ -1,0 +1,2 @@
+# Le dossier supabase/ (schéma de la base) n'est pas une partie du site : on ne le sert pas.
+/supabase/*  /404.html  404!

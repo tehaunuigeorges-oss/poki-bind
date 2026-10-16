@@ -42,7 +42,7 @@ export const CADRES = [
   { id: "argent", nom: "Cadre argent", anneau: anneau("#F2F4F7", "#9AA3AD", "#DDE2E8", "#7D8791"), prix: 400 },
   { id: "flamme", nom: "Cadre flamme", anneau: anneau("feu", "electrique", "feu-fonce"), prix: 500 },
   { id: "ocean", nom: "Cadre océan", anneau: anneau("eau", "psy", "eau-fonce"), prix: 500 },
-  { id: "foret", nom: "Cadre forêt", anneau: anneau("plante", "electrique", "plante-fonce"), prix: 500 },
+  { id: "foret-cadre", nom: "Cadre forêt", anneau: anneau("plante", "electrique", "plante-fonce"), prix: 500 },
   { id: "prisme", nom: "Cadre prisme", anneau: anneau("feu", "electrique", "plante", "eau", "psy", "fee"), prix: 800 },
 ];
 

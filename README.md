@@ -69,6 +69,19 @@ img/partage/           image-de-partage.png (1200 x 630, aperçu des liens)
 - **Cartes** : [TCGdex](https://tcgdex.dev), en français. Les listes de cartes sont gardées une semaine dans le cache du navigateur, le détail d'une carte un jour. La recherche se fait dans le navigateur, sans tenir compte des accents.
 - **Prix** : tendance Cardmarket fournie par TCGdex. Pokibind ne donne aucun prix pour le scellé : l'utilisateur saisit les siens.
 
+## Base de données Supabase (en cours)
+
+Les vrais comptes arrivent par étapes. Le fichier `supabase/schema.sql` crée les tables, les règles d'accès et les fonctions.
+Pour l'installer : dans Supabase, ouvrir **SQL Editor**, coller tout le fichier, puis **Run**. Il peut être relancé sans perdre de données.
+
+Sécurité :
+
+- règles d'accès (RLS) sur toutes les tables : chacun ne lit et ne modifie que ses propres données ;
+- double authentification obligatoire : sans le code à 6 chiffres, la base ne renvoie aucune donnée ;
+- pièces, badges et achats calculés par la base ; les prix de la boutique sont dans la table `objets_boutique` ;
+- le site n'utilise que la clé publique (anon / publishable) ; **la clé « service_role » ou « secret » ne doit jamais être dans le code** ;
+- `_headers` : en-têtes de sécurité envoyés par Netlify (CSP, cadres interdits…) ; `_redirects` : le dossier `supabase/` n'est pas servi.
+
 ## Ajouter des objets à la boutique
 
 - **Bannière ou cadre** : ajouter l'image dans `img/bannieres/` ou `img/cadres/`, puis une ligne dans `js/objets-profil.js` avec son prix. Pour un cadre en image, le fond doit être transparent et il faut indiquer la position du trou (centre et rayon).
