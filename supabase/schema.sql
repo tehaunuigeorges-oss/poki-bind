@@ -4,8 +4,8 @@
 -- Principes de sécurité :
 --   1. Row Level Security (RLS) sur toutes les tables : par défaut, tout est interdit.
 --   2. Chacun ne lit et ne modifie que ses propres lignes (user_id = auth.uid()).
---   3. Double authentification obligatoire : les données ne sont accessibles qu'avec
---      une session vérifiée par le code à 6 chiffres (aal2 dans le jeton).
+--   3. Les données ne sont accessibles qu'avec une vraie session (email confirmé ou Google),
+--      jamais avec un compte anonyme.
 --   4. Pièces, badges et achats : jamais modifiables directement par le site,
 --      seulement par les fonctions de ce fichier (« security definer »).
 --   5. Profils partagés (« Amis », « Public ») : seulement des colonnes choisies,
@@ -16,16 +16,16 @@
 
 -- ---------- Fonctions d'aide ----------
 
--- Vrai si la session courante a passé la double authentification
+-- Vrai si la session courante est celle d'un vrai compte (connecté, pas anonyme)
 create or replace function public.est_verifie()
 returns boolean
 language sql stable
 set search_path = ''
 as $$
-  select coalesce(auth.jwt() ->> 'aal', '') = 'aal2';
+  select auth.uid() is not null and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false;
 $$;
 
--- Identifiant de l'utilisateur, seulement si sa session est vérifiée (sinon null : aucune ligne)
+-- Identifiant de l'utilisateur, seulement si sa session est valide (sinon null : aucune ligne)
 create or replace function public.moi()
 returns uuid
 language sql stable

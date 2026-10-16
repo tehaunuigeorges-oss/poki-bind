@@ -77,7 +77,7 @@ Pour l'installer : dans Supabase, ouvrir **SQL Editor**, coller tout le fichier,
 Sécurité :
 
 - règles d'accès (RLS) sur toutes les tables : chacun ne lit et ne modifie que ses propres données ;
-- double authentification obligatoire : sans le code à 6 chiffres, la base ne renvoie aucune donnée ;
+- seules les personnes connectées (email confirmé ou Google) accèdent à leurs données, jamais à celles des autres ;
 - pièces, badges et achats calculés par la base ; les prix de la boutique sont dans la table `objets_boutique` ;
 - le site n'utilise que la clé publique (anon / publishable) ; **la clé « service_role » ou « secret » ne doit jamais être dans le code** ;
 - `_headers` : en-têtes de sécurité envoyés par Netlify (CSP, cadres interdits…) ; `_redirects` : le dossier `supabase/` n'est pas servi.

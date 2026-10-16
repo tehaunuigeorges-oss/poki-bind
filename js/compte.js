@@ -1,5 +1,4 @@
-// Comptes Pokibind avec Supabase : inscription, connexion (email ou Google), double authentification
-// obligatoire par application (TOTP), mot de passe oublié, déconnexion.
+// Comptes Pokibind avec Supabase : inscription, connexion (email ou Google), mot de passe oublié, déconnexion.
 // Seule la clé PUBLIQUE est ici : elle est faite pour être visible. La sécurité des données repose
 // sur les règles d'accès de la base (supabase/schema.sql). Ne jamais mettre la clé « service_role » ou « secret » ici.
 
@@ -59,16 +58,11 @@ const adresse = (parametres = "") => new URL(`connexion.html${parametres}`, loca
 
 // ---------- État de la session ----------
 
-// « verifie » : connecté ET double authentification passée (aal2) ; c'est le seul état qui donne accès aux données.
-// « code » : mot de passe ou Google OK, il reste le code à 6 chiffres ; « activation » : aucune application liée encore.
+// « connecte » (avec l'utilisateur) ou « deconnecte »
 export async function etatSession() {
   const { data } = await supabase.auth.getSession();
   if (!data.session) return { etat: "deconnecte" };
-  const { data: niveau, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (error) return { etat: "deconnecte" };
-  const utilisateur = data.session.user;
-  if (niveau.currentLevel === "aal2") return { etat: "verifie", utilisateur };
-  return { etat: niveau.nextLevel === "aal2" ? "code" : "activation", utilisateur };
+  return { etat: "connecte", utilisateur: data.session.user };
 }
 
 // ---------- Inscription, connexion ----------
@@ -111,33 +105,6 @@ export async function deconnecter(tous = false) {
   await supabase.auth.signOut({ scope: tous ? "global" : "local" });
 }
 
-// ---------- Double authentification (application : Google Authenticator, 2FAS, Authy…) ----------
-
-// Lie une nouvelle application : renvoie le QR code (image SVG) et la clé à saisir à la main.
-// Une tentative précédente non terminée est d'abord supprimée.
-export async function commencerActivation() {
-  const { data: facteurs } = await supabase.auth.mfa.listFactors();
-  for (const facteur of facteurs?.all ?? []) {
-    if (facteur.factor_type === "totp" && facteur.status !== "verified") await supabase.auth.mfa.unenroll({ factorId: facteur.id });
-  }
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: `Pokibind ${new Date().toLocaleDateString("fr-FR")}` });
-  if (error) throw error;
-  return { facteur: data.id, qr: data.totp.qr_code, cle: data.totp.secret };
-}
-
-// Vérifie le code à 6 chiffres. facteur : celui en cours d'activation, sinon l'application déjà liée.
-export async function verifierCode(code, facteur = null) {
-  let id = facteur;
-  if (!id) {
-    const { data, error } = await supabase.auth.mfa.listFactors();
-    if (error) throw error;
-    id = data.totp[0]?.id;
-    if (!id) throw new Error("aucune application");
-  }
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: id, code });
-  if (error) throw error;
-}
-
 // Traduit les erreurs de Supabase en messages clairs
 export function messageErreur(erreur) {
   const code = erreur?.code ?? "";
@@ -148,7 +115,6 @@ export function messageErreur(erreur) {
   if (code === "weak_password" || texte.includes("password should")) return "Mot de passe trop faible : choisis-en un plus long, avec des lettres et des chiffres.";
   if (code === "same_password") return "Choisis un mot de passe différent de l'ancien.";
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || texte.includes("rate limit")) return "Trop de tentatives. Attends quelques minutes avant de réessayer.";
-  if (code === "mfa_verification_failed" || texte.includes("invalid totp") || texte.includes("invalid mfa")) return "Code incorrect ou expiré. Entre le code affiché maintenant dans ton application.";
   if (texte.includes("failed to fetch") || texte.includes("network")) return "Connexion impossible : vérifie ta connexion internet.";
   if (code === "validation_failed" && texte.includes("provider")) return "La connexion avec Google n'est pas encore activée.";
   return "Une erreur est survenue. Réessaie dans un instant.";

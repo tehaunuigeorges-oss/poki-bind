@@ -104,13 +104,13 @@ function annoncerRecompenses(nouveautes) {
 async function afficher() {
   const connecte = await estConnecte();
 
-  // L'espace membre est réservé aux personnes connectées ; une fois connecté,
-  // l'accueil et la page de connexion mènent directement à la collection.
+  // L'espace membre est réservé aux personnes connectées ; une fois connecté, l'accueil mène
+  // directement à la collection (la page de connexion gère elle-même la page à rouvrir).
   if (espace === "membre" && !connecte) {
     location.replace(`connexion.html?retour=${encodeURIComponent(pageActuelle())}`);
     return;
   }
-  if (connecte && (page === "accueil" || page === "connexion")) {
+  if (connecte && page === "accueil") {
     location.replace("collection.html");
     return;
   }

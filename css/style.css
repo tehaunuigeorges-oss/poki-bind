@@ -1981,14 +1981,6 @@ body.dark .cadre-image { filter: drop-shadow(0 0 1px rgb(255 255 255 / .35)); }
 .page-introuvable .boutons { justify-content: center; }
 
 
-/* ---------- 25. Connexion : activation de la double authentification ---------- */
+/* ---------- 25. Connexion : bouton occupé pendant une requête ---------- */
 
-.activation { display: grid; gap: 14px; justify-items: center; }
-.activation-etapes { display: grid; gap: 6px; margin: 0; padding-left: 20px; font-size: 14px; color: var(--muted); justify-self: stretch; }
-/* Le QR code reste noir sur blanc, même en mode sombre (sinon les téléphones ne le lisent pas) */
-.activation-qr { width: 180px; height: 180px; padding: 10px; border-radius: var(--rayon-m); background: #FFF; }
-.activation-cle, .aide-code { justify-self: stretch; font-size: 13px; color: var(--muted); }
-.activation-cle summary, .aide-code summary { cursor: pointer; }
-.activation-cle p { margin-top: 6px; font-size: 15px; letter-spacing: .08em; word-break: break-all; color: var(--ink); }
-.aide-code p { margin-top: 6px; }
 button[aria-busy="true"] { cursor: progress; opacity: .6; }

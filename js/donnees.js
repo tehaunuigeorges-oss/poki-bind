@@ -24,10 +24,10 @@ function ecrire(cle, valeur) {
 // ---------- Session (comptes Supabase, voir js/compte.js) ----------
 // Les données restent encore dans le navigateur ; elles passeront dans Supabase à l'étape suivante.
 
-// Connecté ET double authentification passée : seul état qui ouvre l'espace membre.
+// Connecté (email confirmé ou Google) : seul état qui ouvre l'espace membre.
 export async function estConnecte() {
   try {
-    return (await etatSession()).etat === "verifie";
+    return (await etatSession()).etat === "connecte";
   } catch (erreur) {
     return false;
   }
