@@ -4,6 +4,7 @@
 import { getPieces, getSession } from "../donnees.js";
 import { BADGES, GAINS, verifierRecompenses } from "../recompenses.js";
 import { COUVERTURES } from "../couvertures.js";
+import { BANNIERES, CADRES, estGratuit } from "../objets-profil.js";
 import { formaterNombre } from "../outils.js";
 
 const pluriel = (nombre, mot) => `${formaterNombre(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;
@@ -25,6 +26,27 @@ document.getElementById("couvertures-a-venir").innerHTML = COUVERTURES.filter((c
     <span class="binder-nom">${c.nom}</span>
     <span class="binder-infos avec-illustration num"><img src="img/badges/piece.webp" alt="" width="14" height="14">${formaterNombre(c.prix)} pièces · verrouillée</span>
   </li>`).join("");
+
+// Bannières et cadres de profil (seuls ceux de la boutique, pas les gratuits)
+const CADENAS = '<span class="cadenas" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+const prix = (objet) => `<span class="binder-infos avec-illustration num"><img src="img/badges/piece.webp" alt="" width="14" height="14">${formaterNombre(objet.prix)} pièces · verrouillé</span>`;
+const apercuBanniere = (objet) => `<span class="objet-banniere" style="background: ${objet.fond}">${CADENAS}</span>`;
+const apercuCadre = (objet) => `<span class="objet-cadre" style="--cadre: ${objet.anneau}"><span class="objet-cadre-centre">Avatar</span>${CADENAS}</span>`;
+
+document.getElementById("bannieres-a-venir").innerHTML = BANNIERES.filter((b) => !estGratuit(b))
+  .map((b) => `<li class="objet">${apercuBanniere(b)}<span class="binder-nom">${b.nom}</span>${prix(b)}</li>`).join("");
+document.getElementById("cadres-a-venir").innerHTML = CADRES.filter((c) => !estGratuit(c))
+  .map((c) => `<li class="objet objet-rond">${apercuCadre(c)}<span class="binder-nom">${c.nom}</span>${prix(c)}</li>`).join("");
+
+// En haut : une couverture, un cadre et une bannière en vedette
+const vitrail = COUVERTURES.find((c) => c.id === "vitrail");
+const dore = CADRES.find((c) => c.id === "dore");
+const aurore = BANNIERES.find((b) => b.id === "aurore");
+const prixVedette = (objet) => `<span class="avec-illustration num"><img src="img/badges/piece.webp" alt="" width="16" height="16">${formaterNombre(objet.prix)} pièces</span>`;
+document.getElementById("objets-vedette").innerHTML = `
+  <li><img class="objet-couverture" src="${vitrail.image}-couverture.webp" alt="" loading="lazy"><span>Couverture ${vitrail.nom}</span>${prixVedette(vitrail)}</li>
+  <li><span class="objet-cadre grand" style="--cadre: ${dore.anneau}" aria-hidden="true"><span class="objet-cadre-centre">Avatar</span></span><span>${dore.nom}</span>${prixVedette(dore)}</li>
+  <li><span class="objet-banniere vedette" style="background: ${aurore.fond}" aria-hidden="true"></span><span>Bannière ${aurore.nom}</span>${prixVedette(aurore)}</li>`;
 
 // « Me prévenir » : rien n'est envoyé en v1 ; l'email sera utilisé avec les vrais comptes.
 const champ = document.getElementById("email-prevenir");

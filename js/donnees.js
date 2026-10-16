@@ -316,6 +316,11 @@ export async function getCouverturesDebloquees() {
   return lire("couvertures", []);
 }
 
+// Bannières et cadres de profil débloqués dans la boutique (aucun tant qu'elle n'est pas ouverte).
+export async function getObjetsDebloques() {
+  return lire("objets", []);
+}
+
 // ---------- Scellé (étape 9) ----------
 // [{ id, nom, type, serie, set, setNom, quantite, achat, revente, ajouteLe }]
 // Produits ajoutés à la main : nom, type, série et set (identifiants TCGdex, "" si non précisés ; setNom garde

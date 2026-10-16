@@ -4,23 +4,16 @@
 // et le compte (déconnexion, suppression des données).
 
 import { getSession, getProfil, enregistrerProfil, getRecompenses, getCollection, nombreExemplaires,
-  getBinders, getChaseCards, seDeconnecter, supprimerMesDonnees } from "../donnees.js";
+  getBinders, getChaseCards, seDeconnecter, supprimerMesDonnees, getObjetsDebloques } from "../donnees.js";
 import { BADGES, mesures, prochainsBadges, setsCompletes, verifierRecompenses } from "../recompenses.js";
 import { couverture } from "../couvertures.js";
+import { BANNIERES, CADRES, banniere, cadre, estDebloque } from "../objets-profil.js";
 import { imageCarte } from "../tcgdex.js";
 import { echapper, formaterNombre, formaterPrix, initiales, annoncer } from "../outils.js";
 
 const zone = document.getElementById("zone-profil");
 const fenetre = document.getElementById("fenetre-profil");
 
-// Bannières de base (les bannières illustrées arriveront avec la boutique)
-const BANNIERES = [
-  { id: "lagune", nom: "Lagune", couleurs: ["eau", "psy"] },
-  { id: "prairie", nom: "Prairie", couleurs: ["plante", "electrique"] },
-  { id: "braise", nom: "Braise", couleurs: ["feu", "fee"] },
-  { id: "nuit", nom: "Nuit", couleurs: ["obscurite", "psy"] },
-  { id: "acier", nom: "Acier", couleurs: ["metal", "eau"] },
-];
 const PSEUDO = /^[a-z0-9._-]{2,20}$/i;
 
 const moisAnnee = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
@@ -34,11 +27,12 @@ let collection = [];
 let binders = [];
 let chase = [];
 let onglet = "activite";
+let debloques = []; // bannières et cadres débloqués dans la boutique
 
-const fondBanniere = (id) => {
-  const banniere = BANNIERES.find((b) => b.id === id) ?? BANNIERES[0];
-  return `linear-gradient(120deg, var(--${banniere.couleurs[0]}), var(--${banniere.couleurs[1]}))`;
-};
+// Un objet verrouillé (pas encore acheté) n'est jamais affiché : on revient à l'objet de base.
+const fondBanniere = (id) => (estDebloque(banniere(id), debloques) ? banniere(id) : BANNIERES[0]).fond;
+const anneauCadre = (id) => (estDebloque(cadre(id), debloques) ? cadre(id) : CADRES[0]).anneau;
+const CADENAS = '<span class="cadenas" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
 
 function ilYA(date) {
   const ecart = (new Date(date).getTime() - Date.now()) / 1000;
@@ -176,7 +170,7 @@ function afficherProfil() {
     <section class="profil-principal" aria-labelledby="nom-profil">
       <div class="banniere" style="background: ${fondBanniere(profil.banniere)}"></div>
       <div class="profil-haut">
-        <span class="avatar-profil" aria-hidden="true">${echapper(initiales(profil.nom) || "?")}</span>
+        <span class="avatar-profil" style="--cadre: ${anneauCadre(profil.cadre)}" aria-hidden="true">${echapper(initiales(profil.nom) || "?")}</span>
         <div class="boutons profil-actions">
           <button class="bouton bouton-secondaire bouton-petit" type="button" disabled title="Le partage par lien arrive plus tard">Partager</button>
           <button class="bouton bouton-secondaire bouton-petit" type="button" id="modifier-profil">Modifier le profil</button>
@@ -276,13 +270,22 @@ async function afficherCreation() {
   zone.querySelector("#creation-nom").focus();
 }
 
-function choixBannieres(selection, nom) {
-  return BANNIERES.map((banniere) => `<label class="choix">
-      <input type="radio" name="${nom}" value="${banniere.id}"${banniere.id === selection ? " checked" : ""}>
-      <span class="choix-apercu" style="background: ${fondBanniere(banniere.id)}"></span>
-      <span class="choix-nom">${banniere.nom}</span>
-    </label>`).join("");
+// Choix d'une bannière ou d'un cadre : ceux de la boutique sont verrouillés (cadenas et prix)
+function choixObjets(objets, selection, nom, apercu) {
+  return objets.map((objet) => {
+    const libre = estDebloque(objet, debloques);
+    return `<label class="choix${libre ? "" : " verrouille"}">
+      <input type="radio" name="${nom}" value="${objet.id}"${objet.id === selection && libre ? " checked" : ""}${libre ? "" : " disabled"}>
+      ${apercu(objet)}${libre ? "" : CADENAS}</span>
+      <span class="choix-nom">${objet.nom}${libre ? "" : `<small>${objet.prix} pièces, bientôt dans la boutique</small>`}</span>
+    </label>`;
+  }).join("");
 }
+
+const choixBannieres = (selection, nom) => choixObjets(BANNIERES, selection, nom,
+  (objet) => `<span class="choix-apercu" style="background: ${objet.fond}">`);
+const choixCadres = (selection, nom) => choixObjets(CADRES, selection, nom,
+  (objet) => `<span class="choix-apercu apercu-cadre"><span class="mini-avatar" style="--cadre: ${objet.anneau}"></span>`);
 
 // Vérifie nom et pseudo ; renvoie le premier champ invalide, ou null
 function verifier(champNom, erreurNom, champPseudo, erreurPseudo) {
@@ -340,7 +343,8 @@ function ouvrirModification() {
   document.getElementById("champ-nom").value = profil.nom;
   document.getElementById("champ-pseudo").value = profil.pseudo;
   document.getElementById("champ-bio").value = profil.bio ?? "";
-  document.getElementById("bannieres-choix").innerHTML = choixBannieres(profil.banniere, "banniere");
+  document.getElementById("bannieres-choix").innerHTML = choixBannieres(estDebloque(banniere(profil.banniere), debloques) ? banniere(profil.banniere).id : BANNIERES[0].id, "banniere");
+  document.getElementById("cadres-choix").innerHTML = choixCadres(estDebloque(cadre(profil.cadre), debloques) ? cadre(profil.cadre).id : CADRES[0].id, "cadre");
   const obtenus = BADGES.filter((badge) => recompenses.obtenus[badge.cle]);
   document.getElementById("groupe-badge").hidden = obtenus.length === 0;
   document.getElementById("champ-badge").innerHTML = '<option value="">Aucun</option>'
@@ -373,6 +377,7 @@ document.getElementById("formulaire-profil").addEventListener("submit", async (e
     pseudo: champPseudo.value.trim(),
     bio: document.getElementById("champ-bio").value.trim(),
     banniere: fenetre.querySelector("input[name=banniere]:checked")?.value ?? profil.banniere,
+    cadre: fenetre.querySelector("input[name=cadre]:checked")?.value ?? profil.cadre ?? CADRES[0].id,
     badge: document.getElementById("champ-badge").value,
     favorites,
   });
@@ -421,7 +426,8 @@ zone.addEventListener("keydown", (evenement) => {
 
 // ---------- Chargement ----------
 
-await verifierRecompenses().catch(() => null); // connexion du jour et badges comptés avant l'affichage
+await verifierRecompenses().catch(() => null);
+debloques = await getObjetsDebloques(); // connexion du jour et badges comptés avant l'affichage
 let chase_;
 [profil, recompenses, collection, { libres: binders }, chase_] = await Promise.all([
   getProfil(), getRecompenses(), getCollection(), getBinders(), getChaseCards(),
