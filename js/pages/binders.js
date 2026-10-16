@@ -227,7 +227,7 @@ formulaire.addEventListener("submit", async (evenement) => {
       panneau.querySelector('[data-action="modifier"]').focus();
     }
   } catch (erreur) {
-    erreurNom.textContent = "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+    erreurNom.textContent = "Impossible d'enregistrer : vérifie ta connexion internet et réessaie.";
   }
 });
 
@@ -373,7 +373,7 @@ resultatsAjout.addEventListener("click", async (evenement) => {
   } catch (erreur) {
     annonceAjout.textContent = erreur instanceof ErreurBinder
       ? `Tous tes exemplaires de ${entree.nom} sont déjà dans un binder.`
-      : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+      : "Impossible d'enregistrer : vérifie ta connexion internet et réessaie.";
   }
 });
 
@@ -428,7 +428,7 @@ async function deplacer(depart, arrivee) {
   try {
     remplacer(await deplacerCarte(ouvert.id, depart, arrivee));
   } catch (erreur) {
-    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
   }
   afficherEtagere();
   afficherBinder();

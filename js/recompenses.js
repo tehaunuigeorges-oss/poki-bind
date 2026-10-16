@@ -1,9 +1,9 @@
-// Pièces et badges. Montants provisoires, à fixer quand la boutique ouvrira.
-// verifierRecompenses() est appelée à chaque page de l'espace membre (js/entete.js) : elle compte la
-// connexion du jour, puis donne les pièces et les badges mérités depuis la dernière visite.
-// Un badge ou un set complété ne rapporte qu'une fois, même si on retire ensuite des cartes.
+// Pièces et badges. verifierRecompenses() est appelée à chaque page de l'espace membre (js/entete.js) :
+// la base (fonction verifier_recompenses de supabase/schema.sql) compte la connexion du jour, puis donne
+// les pièces et les badges mérités depuis la dernière visite. Un badge ou un set complété ne rapporte qu'une fois.
+// Les montants et badges ci-dessous servent à l'affichage : ils doivent rester identiques à ceux de la base.
 
-import { getRecompenses, enregistrerRecompenses, getCollection, nombreExemplaires, getBinders, getChaseCards } from "./donnees.js";
+import { compterRecompenses, getCollection, nombreExemplaires, getBinders, getChaseCards } from "./donnees.js";
 import { estOfficielle } from "./tcgdex.js";
 
 export const GAINS = {
@@ -28,16 +28,6 @@ export const BADGES = [
   { cle: "set-complete", nom: "Premier set complété", image: "badge-set-complete", mesure: "sets", objectif: 1, pieces: 0 },
   { cle: "sets-5", nom: "5 sets complétés", image: "badge-5-sets-completes", mesure: "sets", objectif: 5, pieces: 300 },
 ];
-
-// Date du jour en heure locale : « 2026-10-16 »
-export function aujourdhui(date = new Date()) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function veille(jour) {
-  const [a, m, j] = jour.split("-").map(Number);
-  return aujourdhui(new Date(a, m - 1, j - 1));
-}
 
 // Sets terminés : toutes les cartes numérotées possédées (les cartes secrètes ne comptent pas)
 export function setsCompletes(collection) {
@@ -76,53 +66,6 @@ export function prochainsBadges(recompenses, valeurs, nombre = 3) {
 // Renvoie { pieces, nouveautes: [texte, …] }. Une seule vérification par page, même si plusieurs scripts la demandent.
 let verification = null;
 export function verifierRecompenses() {
-  verification ??= verifier();
+  verification ??= compterRecompenses();
   return verification;
-}
-
-async function verifier() {
-  const recompenses = await getRecompenses();
-  const nouveautes = [];
-  const jour = aujourdhui();
-  const gagner = (cle, texte, pieces) => {
-    recompenses.pieces += pieces;
-    recompenses.journal.push({ date: new Date().toISOString(), cle, texte, pieces });
-    nouveautes.push(pieces ? `${texte} : +${pieces} pièces` : texte);
-  };
-
-  // Cadeau de bienvenue : la toute première visite de l'espace membre (une seule fois)
-  if (recompenses.jours.length === 0 && !recompenses.obtenus.bienvenue) {
-    recompenses.obtenus.bienvenue = jour;
-    gagner("bienvenue", "Bienvenue sur Pokibind", GAINS.bienvenue);
-  }
-
-  // Connexion du jour et série de jours d'affilée
-  if (!recompenses.jours.includes(jour)) {
-    const precedent = recompenses.jours.at(-1);
-    recompenses.serie = precedent === veille(jour) ? recompenses.serie + 1 : 1;
-    recompenses.meilleureSerie = Math.max(recompenses.meilleureSerie, recompenses.serie);
-    recompenses.jours.push(jour);
-    recompenses.pieces += GAINS.connexion;
-    nouveautes.push(`Connexion du jour : +${GAINS.connexion} pièces`);
-  }
-
-  const valeurs = await mesures(recompenses);
-
-  // Sets complétés (une fois chacun)
-  for (const set of setsCompletes(valeurs.collection)) {
-    const cle = `set:${set.id}`;
-    if (recompenses.obtenus[cle]) continue;
-    recompenses.obtenus[cle] = jour;
-    gagner(cle, `Set ${set.nom} complété`, GAINS.setComplete);
-  }
-
-  // Badges
-  for (const badge of BADGES) {
-    if (recompenses.obtenus[badge.cle] || valeurs[badge.mesure] < badge.objectif) continue;
-    recompenses.obtenus[badge.cle] = jour;
-    gagner(badge.cle, `Badge « ${badge.nom} » débloqué`, badge.pieces);
-  }
-
-  if (nouveautes.length) await enregistrerRecompenses(recompenses);
-  return { pieces: recompenses.pieces, nouveautes };
 }

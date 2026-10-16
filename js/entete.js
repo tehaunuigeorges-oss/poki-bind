@@ -3,7 +3,7 @@
 //   <body data-page="collection" data-espace="membre">   (ou data-espace="visiteur")
 
 import { brancherBoutonTheme } from "./theme.js";
-import { estConnecte, getProfil, getPieces } from "./donnees.js";
+import { estConnecte, getProfil, getPieces, donneesLocales, importerDonneesLocales } from "./donnees.js";
 import { verifierRecompenses } from "./recompenses.js";
 import { echapper, formaterNombre, initiales } from "./outils.js";
 
@@ -101,6 +101,32 @@ function annoncerRecompenses(nouveautes) {
   }, 300);
 }
 
+// Données de la version 1 du site, gardées dans ce navigateur : proposées à l'import dans le compte.
+// Renvoie true si la page va se recharger avec les données importées.
+async function proposerImport() {
+  const locales = donneesLocales();
+  if (!locales) return false;
+  const pluriel = (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`;
+  const contenu = [
+    locales.cartes && pluriel(locales.cartes, "carte"),
+    locales.binders && pluriel(locales.binders, "binder"),
+    locales.chase && pluriel(locales.chase, "chase card"),
+    locales.scelle && pluriel(locales.scelle, "produit") + " scellé" + (locales.scelle > 1 ? "s" : ""),
+    locales.profil && "ton profil",
+  ].filter(Boolean).join(", ");
+  const ok = confirm(`Ce navigateur garde des données Pokibind enregistrées avant la création des comptes : ${contenu}.\n\n`
+    + "OK : les ajouter à ton compte (elles seront ensuite effacées de ce navigateur).\nAnnuler : me le redemander plus tard.");
+  if (!ok) return false;
+  try {
+    await importerDonneesLocales();
+  } catch (erreur) {
+    alert("L'import n'a pas abouti : tes données sont toujours dans ce navigateur. Réessaie plus tard.");
+    return false;
+  }
+  location.reload();
+  return true;
+}
+
 async function afficher() {
   const connecte = await estConnecte();
 
@@ -114,6 +140,8 @@ async function afficher() {
     location.replace("collection.html");
     return;
   }
+
+  if (espace === "membre" && await proposerImport()) return;
 
   const entete = document.getElementById("entete");
   if (espace === "membre") {

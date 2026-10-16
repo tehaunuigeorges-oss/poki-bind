@@ -4,7 +4,7 @@
 // et le compte (déconnexion, suppression des données).
 
 import { getSession, getProfil, enregistrerProfil, getRecompenses, getCollection, nombreExemplaires,
-  getBinders, getChaseCards, seDeconnecter, supprimerMesDonnees, getObjetsDebloques } from "../donnees.js";
+  getBinders, getChaseCards, seDeconnecter, getObjetsDebloques, ErreurPseudoPris } from "../donnees.js";
 import { BADGES, mesures, prochainsBadges, setsCompletes, verifierRecompenses } from "../recompenses.js";
 import { couverture } from "../couvertures.js";
 import { BANNIERES, CADRES, banniere, cadre, estDebloque, avecCadre } from "../objets-profil.js";
@@ -236,7 +236,6 @@ function afficherProfil() {
         <h2 id="titre-compte">Mon compte</h2>
         <button class="bouton bouton-secondaire bouton-petit" type="button" id="bouton-deconnexion">Se déconnecter</button>
         <button class="lien" type="button" id="bouton-deconnexion-tous">Se déconnecter de tous les appareils</button>
-        <button class="lien lien-danger" type="button" id="bouton-supprimer">Supprimer mes données</button>
       </section>
     </aside>
   </div>`;
@@ -298,6 +297,17 @@ const choixBannieres = (selection, nom) => choixObjets(BANNIERES, selection, nom
 const choixCadres = (selection, nom) => choixObjets(CADRES, selection, nom,
   (objet) => `<span class="choix-apercu apercu-cadre">${avecCadre(objet, "", "mini-avatar")}`);
 
+// Pseudo déjà pris : message sous le champ ; autre erreur (connexion…) : message général
+function erreurEnregistrement(erreur, champPseudo, erreurPseudo) {
+  if (erreur instanceof ErreurPseudoPris) {
+    erreurPseudo.textContent = "Ce pseudo est déjà pris : choisis-en un autre.";
+    champPseudo.setAttribute("aria-invalid", "true");
+    champPseudo.focus();
+  } else {
+    annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
+  }
+}
+
 // Vérifie nom et pseudo ; renvoie le premier champ invalide, ou null
 function verifier(champNom, erreurNom, champPseudo, erreurPseudo) {
   let premier = null;
@@ -325,12 +335,17 @@ zone.addEventListener("submit", async (evenement) => {
     invalide.focus();
     return;
   }
-  profil = await enregistrerProfil({
-    nom: zone.querySelector("#creation-nom").value.trim(),
-    pseudo: zone.querySelector("#creation-pseudo").value.trim(),
-    bio: zone.querySelector("#creation-bio").value.trim(),
-    banniere: zone.querySelector("input[name=creation-banniere]:checked").value,
-  });
+  try {
+    profil = await enregistrerProfil({
+      nom: zone.querySelector("#creation-nom").value.trim(),
+      pseudo: zone.querySelector("#creation-pseudo").value.trim(),
+      bio: zone.querySelector("#creation-bio").value.trim(),
+      banniere: zone.querySelector("input[name=creation-banniere]:checked").value,
+    });
+  } catch (erreur) {
+    erreurEnregistrement(erreur, zone.querySelector("#creation-pseudo"), zone.querySelector("#erreur-creation-pseudo"));
+    return;
+  }
   afficherProfil();
   zone.querySelector("h1").setAttribute("tabindex", "-1");
   zone.querySelector("h1").focus();
@@ -383,15 +398,20 @@ document.getElementById("formulaire-profil").addEventListener("submit", async (e
     const entree = collection.find((e) => e.id === id) ?? profil.favorites.find((f) => f.id === id);
     return { id: entree.id, nom: entree.nom, numero: entree.numero, image: entree.image, set: entree.set };
   });
-  profil = await enregistrerProfil({
-    nom: champNom.value.trim(),
-    pseudo: champPseudo.value.trim(),
-    bio: document.getElementById("champ-bio").value.trim(),
-    banniere: fenetre.querySelector("input[name=banniere]:checked")?.value ?? profil.banniere,
-    cadre: fenetre.querySelector("input[name=cadre]:checked")?.value ?? profil.cadre ?? CADRES[0].id,
-    badge: document.getElementById("champ-badge").value,
-    favorites,
-  });
+  try {
+    profil = await enregistrerProfil({
+      nom: champNom.value.trim(),
+      pseudo: champPseudo.value.trim(),
+      bio: document.getElementById("champ-bio").value.trim(),
+      banniere: fenetre.querySelector("input[name=banniere]:checked")?.value ?? profil.banniere,
+      cadre: fenetre.querySelector("input[name=cadre]:checked")?.value ?? profil.cadre ?? CADRES[0].id,
+      badge: document.getElementById("champ-badge").value,
+      favorites,
+    });
+  } catch (erreur) {
+    erreurEnregistrement(erreur, champPseudo, document.getElementById("erreur-champ-pseudo"));
+    return;
+  }
   fenetre.close();
   afficherProfil();
   document.getElementById("modifier-profil").focus();
@@ -413,12 +433,6 @@ zone.addEventListener("click", async (evenement) => {
   } else if (bouton.id === "bouton-deconnexion" || bouton.id === "bouton-deconnexion-tous") {
     // « tous les appareils » : utile après un oubli de déconnexion sur un autre ordinateur
     await seDeconnecter(bouton.id === "bouton-deconnexion-tous");
-    location.href = "index.html";
-  } else if (bouton.id === "bouton-supprimer") {
-    const ok = confirm("Supprimer toutes tes données Pokibind ?\n\nTa collection, tes binders, tes chase cards, ton scellé, ton profil, tes pièces et tes badges seront effacés de ce navigateur. C'est définitif.");
-    if (!ok) return;
-    await supprimerMesDonnees();
-    await seDeconnecter();
     location.href = "index.html";
   }
 });

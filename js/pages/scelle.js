@@ -206,7 +206,7 @@ document.getElementById("formulaire-produit").addEventListener("submit", async (
       annoncer(`${nom} ajouté à ta collection scellée.`);
     }
   } catch (erreur) {
-    document.getElementById("erreur-prix").textContent = "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+    document.getElementById("erreur-prix").textContent = "Impossible d'enregistrer : vérifie ta connexion internet et réessaie.";
     return;
   }
   fenetre.close();

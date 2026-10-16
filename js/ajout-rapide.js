@@ -15,5 +15,5 @@ export async function ajouterVarianteCourante(id) {
 export function messageErreurAjout(erreur) {
   return erreur instanceof ErreurTcgdex
     ? "Impossible d'ajouter la carte : la base de cartes ne répond pas. Réessaie dans un instant."
-    : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+    : "Impossible d'enregistrer : vérifie ta connexion internet et réessaie.";
 }

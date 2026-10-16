@@ -93,7 +93,7 @@ fenetre.addEventListener("close", async () => {
   try {
     resultat = await acheterObjet({ categorie: objet.categorie, id: objet.id, nom: objet.nom, prix: objet.prix });
   } catch (erreur) {
-    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
     return;
   }
   pieces = resultat.pieces;
@@ -102,7 +102,7 @@ fenetre.addEventListener("close", async () => {
     const ou = objet.categorie === "objets" ? "« Modifier le profil »" : "les réglages de tes binders";
     annoncer(`${objet.nom} est débloqué : choisis-le dans ${ou}.`);
   } else {
-    annoncer(resultat.raison === "deja" ? `${objet.nom} est déjà débloqué.` : `Il te manque des pièces pour débloquer ${objet.nom}.`);
+    annoncer(resultat.raison === "deja" ? `${objet.nom} est déjà débloqué.` : resultat.raison === "inconnu" ? `${objet.nom} n'est pas encore en vente.` : `Il te manque des pièces pour débloquer ${objet.nom}.`);
   }
   afficher();
   document.getElementById("titre-boutique").setAttribute("tabindex", "-1");

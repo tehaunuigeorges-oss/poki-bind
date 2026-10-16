@@ -274,7 +274,7 @@ document.getElementById("formulaire-placer").addEventListener("submit", async (e
     fenetrePlacer.close();
     annoncer(erreur instanceof ErreurBinder
       ? "Tous tes exemplaires de cette carte sont déjà dans un binder."
-      : "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+      : "Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
   }
   document.getElementById("bouton-binder").focus();
 });
@@ -300,7 +300,7 @@ async function changerFavorite() {
   try {
     resultat = await basculerFavorite(resumeCarte(carte));
   } catch (erreur) {
-    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
     return;
   }
   if (resultat.plein) {
@@ -371,7 +371,7 @@ document.getElementById("formulaire-chase").addEventListener("submit", async (ev
       prix: prixDe(variante), prixLe: new Date().toISOString(),
     });
   } catch (erreur) {
-    erreurPrixMax.textContent = "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+    erreurPrixMax.textContent = "Impossible d'enregistrer : vérifie ta connexion internet et réessaie.";
     return;
   }
   fenetreChase.close();
@@ -399,7 +399,7 @@ async function changerQuantite(cle, difference) {
       ? await ajouterCarte(resumeCarte(carte), cle, difference)
       : await retirerCarte(carte.id, cle, -difference);
   } catch (erreur) {
-    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    annoncer("Impossible d'enregistrer : vérifie ta connexion internet et réessaie.");
     return;
   }
   majQuantites();

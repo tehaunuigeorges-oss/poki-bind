@@ -277,8 +277,9 @@ begin
 end $$;
 
 -- Profils : chacun gère le sien ; les autres le voient selon sa visibilité
+-- (id = moi() d'abord : à la création, peut_voir ne voit pas encore la nouvelle ligne)
 create policy profils_lecture on public.profils for select to anon, authenticated
-  using (public.peut_voir(id));
+  using (id = public.moi() or public.peut_voir(id));
 create policy profils_creation on public.profils for insert to authenticated
   with check (id = public.moi());
 create policy profils_modification on public.profils for update to authenticated
