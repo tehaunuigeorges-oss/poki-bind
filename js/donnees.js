@@ -5,6 +5,8 @@
 // Les fonctions sont asynchrones (à utiliser avec await) et lèvent une erreur si l'enregistrement échoue.
 
 import { supabase, etatSession, deconnecter } from "./compte.js";
+import { BANNIERES, CADRES } from "./objets-profil.js";
+import { COUVERTURES } from "./couvertures.js";
 
 // Lance une requête Supabase et renvoie ses données, ou lève son erreur.
 async function requete(promesse) {
@@ -564,6 +566,10 @@ export async function choisirBudgetChase(budget) {
 // Une seule fois : les données sont ajoutées au compte, puis la copie du navigateur est effacée.
 // Ce qui existe déjà dans le compte est gardé tel quel. Les pièces, badges et achats ne sont pas importés :
 // la base les recalcule (cadeau de bienvenue, badges et sets complétés d'après la collection importée).
+// Les objets de la boutique (bannière, cadre, couverture) et le badge choisis dans la version 1 sont remplacés
+// par ceux de départ : la base refuse ceux qui ne sont pas débloqués dans le compte.
+
+const gratuit = (liste, id) => (liste.some((objet) => objet.id === id && !objet.prix) ? id : liste[0].id);
 
 const CLES_LOCALES = ["collection", "binders", "chase", "scelle", "historique", "recompenses", "couvertures", "objets", "session"];
 
@@ -595,7 +601,7 @@ export async function importerDonneesLocales() {
   if (cartes.length) await requete(supabase.from("collection").upsert(cartes, sansDoublons));
 
   const binders = tableau(lireLocal("binders", {})?.libres).map((binder) => ({
-    nom: String(binder.nom || "Mon binder").slice(0, 40), couverture: binder.couverture, cartes: tableau(binder.cartes).map((carte) => carte ?? null),
+    nom: String(binder.nom || "Mon binder").slice(0, 40), couverture: gratuit(COUVERTURES, binder.couverture), cartes: tableau(binder.cartes).map((carte) => carte ?? null),
     cree_le: binder.creeLe ?? new Date().toISOString(),
   }));
   if (binders.length) await requete(supabase.from("binders").insert(binders));
@@ -615,7 +621,7 @@ export async function importerDonneesLocales() {
   const profil = lireLocal("profil", null);
   if (profil?.pseudo && !(await lireProfil())) {
     try {
-      await enregistrerProfil(profil);
+      await enregistrerProfil({ ...profil, banniere: gratuit(BANNIERES, profil.banniere), cadre: gratuit(CADRES, profil.cadre), badge: "" });
     } catch (erreur) {
       if (!(erreur instanceof ErreurPseudoPris)) throw erreur;
       ecrireLocal("profil", { favorites: tableau(profil.favorites) });

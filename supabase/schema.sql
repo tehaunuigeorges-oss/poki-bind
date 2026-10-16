@@ -225,6 +225,57 @@ as $$
   );
 $$;
 
+-- ---------- Objets de la boutique et badges : seulement ceux débloqués ----------
+-- Le site ne propose que les objets débloqués ; ces vérifications empêchent de contourner la boutique
+-- en écrivant directement dans la base. Contrôlé seulement quand la valeur change.
+
+create or replace function public.verifier_choix_profil()
+returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+begin
+  if (tg_op = 'INSERT' or new.banniere is distinct from old.banniere or new.cadre is distinct from old.cadre)
+    and exists (
+      select 1 from public.objets_boutique o
+      where o.id in (new.banniere, new.cadre) and o.categorie = 'objets'
+        and not exists (select 1 from public.deblocages d where d.user_id = new.id and d.objet_id = o.id)
+    ) then
+    raise exception 'bannière ou cadre non débloqué' using errcode = '42501';
+  end if;
+  if (tg_op = 'INSERT' or new.badge is distinct from old.badge) and new.badge <> ''
+    and not exists (select 1 from public.recompenses r where r.user_id = new.id and r.obtenus ? new.badge) then
+    raise exception 'badge non obtenu' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.verifier_couverture()
+returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+begin
+  if (tg_op = 'INSERT' or new.couverture is distinct from old.couverture)
+    and exists (
+      select 1 from public.objets_boutique o
+      where o.id = new.couverture and o.categorie = 'couvertures'
+        and not exists (select 1 from public.deblocages d where d.user_id = new.user_id and d.objet_id = o.id)
+    ) then
+    raise exception 'couverture non débloquée' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profils_choix on public.profils;
+create trigger profils_choix before insert or update on public.profils
+  for each row execute function public.verifier_choix_profil();
+drop trigger if exists binders_couverture on public.binders;
+create trigger binders_couverture before insert or update on public.binders
+  for each row execute function public.verifier_couverture();
+
 -- =============================================================================
 -- Droits : on retire tout, puis on rend seulement le nécessaire
 -- =============================================================================
@@ -263,7 +314,8 @@ grant select on public.objets_boutique to anon, authenticated;
 grant select on public.binders to anon;
 
 grant execute on function public.est_verifie(), public.moi(), public.taille_json(jsonb), public.variantes_valides(jsonb) to anon, authenticated;
-grant execute on function public.peut_voir(uuid), public.sont_amis(uuid, uuid) to anon, authenticated;
+-- sont_amis n'est appelée que par peut_voir (security definer) : personne ne peut tester une amitié directement
+grant execute on function public.peut_voir(uuid) to anon, authenticated;
 
 -- ---------- Règles d'accès (RLS) ----------
 
