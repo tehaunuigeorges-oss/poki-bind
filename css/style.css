@@ -1740,36 +1740,7 @@ body.dark { --serie-cartes: #5A8FD0; --serie-scelle: #D46A3C; }
 .boite.booster::after { width: 36%; }
 .boite.pokebox { width: 92px; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 6px 0 color-mix(in srgb, var(--teinte) 60%, #000), 0 10px 22px rgb(20 22 30 / .18); }
 .boite.pokebox::before { top: 34%; left: 18%; right: 18%; }
-.boite.mini { width: 30px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--teinte) 60%, #000); }
-.boite.mini.booster { width: 18px; }
-.boite.mini.pokebox { width: 26px; box-shadow: 0 2px 0 color-mix(in srgb, var(--teinte) 60%, #000); }
-.boite.mini::after { display: none; }
 
-/* Fenêtre d'ajout : recherche dans le catalogue */
-.recherche-scelle { display: grid; gap: 8px; }
-@media (min-width: 600px) {
-  .recherche-scelle { grid-template-columns: minmax(0, 1fr) 220px; }
-}
-.liste-catalogue { display: grid; align-content: start; gap: 6px; min-height: 0; margin: 0; padding: 2px; overflow: auto; list-style: none; }
-.choix-catalogue {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--rayon-m);
-  background: var(--bg);
-  color: var(--ink);
-  text-align: left;
-}
-.choix-catalogue:hover { border-color: var(--ink); }
-.choix-catalogue .boite { flex: none; }
-.choix-catalogue-texte { display: grid; gap: 2px; min-width: 0; font-size: 14px; }
-.choix-catalogue-texte small { color: var(--muted); font-size: 12px; }
-.aide-catalogue { font-size: 13px; color: var(--muted); }
-#fenetre-ajout[open] { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; }
-#plus-catalogue { justify-self: center; }
 .champs-cote { display: grid; gap: 14px; }
 @media (min-width: 480px) {
   .champs-cote { grid-template-columns: repeat(2, minmax(0, 1fr)); }

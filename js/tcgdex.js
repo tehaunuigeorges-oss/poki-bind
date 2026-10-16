@@ -102,6 +102,12 @@ export const getCarte = (id) => charger(`cards/${encodeURIComponent(id)}`, JOUR)
 export const getSet = (id) => charger(`sets/${encodeURIComponent(id)}`, SEMAINE);
 export const getSerie = (id) => charger(`series/${encodeURIComponent(id)}`, SEMAINE);
 
+// Toutes les séries, de la plus récente à la plus ancienne (sans Pokémon TCG Pocket).
+export async function getSeries() {
+  const series = await charger("series", SEMAINE);
+  return series.filter((serie) => !SERIES_IGNOREES.has(serie.id)).reverse().map((serie) => ({ id: serie.id, nom: serie.name }));
+}
+
 // Logo ou symbole d'un set ou d'une série (adresse TCGdex sans extension).
 // TCGdex donne les symboles sous « /univ/ », qui répond toujours « 400 » : les fichiers
 // sont en réalité sous « /fr/ » (pour une partie des sets seulement).

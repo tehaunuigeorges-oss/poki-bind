@@ -72,37 +72,25 @@
       <button class="bouton bouton-petit" type="button" id="bouton-ajouter-vide">Ajouter un produit</button>
     </div>
 
-    <p class="note-page">Produits français uniquement, sans photo pour l'instant. La liste vient du catalogue d'une boutique française, complétée par le booster et le display de chaque extension : si un produit manque, ajoute-le à la main. Le prix d'achat et la revente estimée sont ceux que tu saisis.</p>
-
-    <dialog class="fenetre fenetre-large" id="fenetre-ajout" aria-labelledby="titre-ajout">
-      <div class="fenetre-tete">
-        <h2 id="titre-ajout">Ajouter un produit scellé</h2>
-        <button class="bouton-icone" type="button" id="fermer-ajout" aria-label="Fermer">×</button>
-      </div>
-      <form class="recherche-scelle" id="recherche-scelle" role="search" novalidate>
-        <label class="sr-only" for="requete-scelle">Nom du produit</label>
-        <input class="champ" id="requete-scelle" type="search" placeholder="Ex. display 151, coffret Dracaufeu…" autocomplete="off" spellcheck="false">
-        <label class="sr-only" for="type-scelle">Type de produit</label>
-        <select class="champ" id="type-scelle"><option value="">Tous les types</option></select>
-      </form>
-      <p class="surtitre num" id="resume-catalogue" role="status"></p>
-      <ul class="liste-catalogue" id="liste-catalogue"></ul>
-      <button class="bouton bouton-secondaire bouton-petit" id="plus-catalogue" type="button" hidden>Voir plus de produits</button>
-      <p class="aide-catalogue">Ton produit n'est pas dans la liste ? <button class="lien" type="button" id="produit-libre">Ajoute-le à la main</button></p>
-    </dialog>
+    <p class="note-page">Produits français uniquement, sans photo pour l'instant. Tu ajoutes toi-même chaque produit : son nom, son type, sa série, sa quantité, ton prix d'achat et ta revente estimée.</p>
 
     <dialog class="fenetre" id="fenetre-produit" aria-labelledby="titre-produit">
       <form class="formulaire" id="formulaire-produit" novalidate>
-        <h2 id="titre-produit">Ton produit</h2>
-        <p class="champ-aide" id="produit-choisi"></p>
-        <div class="champ-groupe" id="groupe-nom-libre">
-          <label for="nom-libre">Nom du produit</label>
-          <input class="champ" id="nom-libre" maxlength="120" autocomplete="off" aria-describedby="erreur-nom-libre">
-          <p class="champ-erreur" id="erreur-nom-libre"></p>
+        <h2 id="titre-produit">Ajouter un produit scellé</h2>
+        <div class="champ-groupe">
+          <label for="nom-produit">Nom du produit</label>
+          <input class="champ" id="nom-produit" maxlength="120" autocomplete="off" placeholder="Ex. Display 151" aria-describedby="erreur-nom">
+          <p class="champ-erreur" id="erreur-nom"></p>
         </div>
-        <div class="champ-groupe" id="groupe-type-libre">
-          <label for="type-libre">Type</label>
-          <select class="champ" id="type-libre"></select>
+        <div class="champs-cote">
+          <div class="champ-groupe">
+            <label for="type-produit">Type</label>
+            <select class="champ" id="type-produit"></select>
+          </div>
+          <div class="champ-groupe">
+            <label for="serie-produit">Série</label>
+            <select class="champ" id="serie-produit"><option value="">Non précisée</option></select>
+          </div>
         </div>
         <div class="champ-groupe">
           <label for="quantite-produit">Quantité</label>
