@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mes chase cards · Pokibind</title>
+  <meta name="description" content="Les cartes que tu cherches, ton budget et tes prix max.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/chase-cards.js"></script>
+</head>
+<body data-page="chase-cards" data-espace="membre">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="tete-page tete-avec-action">
+      <div class="tete-page">
+        <h1>Mes chase cards</h1>
+        <p>Les cartes que tu cherches. Fixe ton prix maximum : la page te montre quand une carte passe en dessous.</p>
+        <p class="maj-prix" id="maj-prix" role="status"></p>
+      </div>
+      <a class="bouton" href="recherche.html"><span aria-hidden="true">+</span> Ajouter une chase card</a>
+    </div>
+
+    <div class="encart" id="chase-vide" hidden>
+      <h2>Aucune chase card pour l'instant</h2>
+      <p>Cherche une carte, ouvre sa fiche, puis choisis « ☆ Ajouter aux chase cards » et fixe ton prix maximum.</p>
+      <a class="bouton bouton-petit" href="recherche.html">Rechercher une carte</a>
+    </div>
+
+    <div class="stats" id="chase">
+      <section class="kpis" aria-label="Résumé">
+        <div class="kpi">
+          <p class="surtitre">Cartes recherchées</p>
+          <p class="chiffre num" id="kpi-recherchees">—</p>
+          <p class="kpi-detail" id="kpi-recherchees-detail"></p>
+        </div>
+        <div class="kpi" id="kpi-budget">
+          <div class="kpi-tete">
+            <p class="surtitre" id="titre-budget">Ton budget total</p>
+            <button class="bouton bouton-secondaire bouton-mini" type="button" id="bouton-budget">Modifier</button>
+          </div>
+          <p class="chiffre num" id="valeur-budget">—</p>
+          <form class="formulaire-budget" id="formulaire-budget" hidden novalidate>
+            <input class="champ num" id="champ-budget" type="number" inputmode="decimal" min="0" step="10" aria-labelledby="titre-budget">
+            <button class="bouton bouton-petit" type="submit">OK</button>
+            <button class="bouton bouton-secondaire bouton-petit" type="button" id="annuler-budget">Annuler</button>
+          </form>
+          <p class="kpi-detail">fixé par toi</p>
+        </div>
+        <div class="kpi">
+          <p class="surtitre">Prix actuel total</p>
+          <p class="chiffre num" id="kpi-total">—</p>
+          <p class="kpi-detail" id="kpi-total-detail"></p>
+        </div>
+        <div class="kpi">
+          <p class="surtitre">Bonnes affaires</p>
+          <p class="chiffre num" id="kpi-affaires">—</p>
+          <p class="kpi-detail">sous ton prix max</p>
+        </div>
+      </section>
+
+      <div class="segments" role="group" aria-label="Cartes à afficher" id="filtre-chase">
+        <button type="button" data-filtre="toutes" aria-pressed="true">Toutes</button>
+        <button type="button" data-filtre="affaires" aria-pressed="false">Sous mon prix max</button>
+      </div>
+
+      <div class="groupes-chase" id="groupes-chase"></div>
+
+      <details class="trouvees" id="trouvees" hidden>
+        <summary>Trouvées <span class="num" id="nombre-trouvees"></span></summary>
+        <ul class="liste-chase" id="liste-trouvees"></ul>
+      </details>
+
+      <p class="note-page">Quand tu ajoutes une chase card à ta collection, elle passe en « Trouvée ». Les prix sont la tendance Cardmarket de la variante cherchée, remise à jour une fois par jour à l'ouverture de cette page. Les alertes par email arriveront avec les vrais comptes.</p>
+    </div>
+
+    <dialog class="fenetre" id="fenetre-modifier" aria-labelledby="titre-modifier">
+      <form class="formulaire" id="formulaire-modifier" novalidate>
+        <h2 id="titre-modifier">Modifier la chase card</h2>
+        <div class="champ-groupe">
+          <label for="modifier-prix-max">Ton prix maximum (€)</label>
+          <input class="champ num" id="modifier-prix-max" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="modifier-aide erreur-modifier">
+          <p class="champ-aide" id="modifier-aide"></p>
+          <p class="champ-erreur" id="erreur-modifier"></p>
+        </div>
+        <fieldset class="liste-choix">
+          <legend class="champ-legende">Priorité</legend>
+          <label class="case"><input type="radio" name="priorite" value="haute"><span>Haute</span></label>
+          <label class="case"><input type="radio" name="priorite" value="moyenne"><span>Moyenne</span></label>
+          <label class="case"><input type="radio" name="priorite" value="basse"><span>Basse</span></label>
+        </fieldset>
+        <div class="boutons">
+          <button class="bouton" type="submit">Enregistrer</button>
+          <button class="bouton bouton-secondaire" type="button" id="annuler-modifier">Annuler</button>
+        </div>
+        <button class="lien lien-danger" type="button" id="retirer-chase">Retirer des chase cards</button>
+      </form>
+    </dialog>
+    <p class="annonce" id="annonce" role="status"></p>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

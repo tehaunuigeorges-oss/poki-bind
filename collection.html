@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ma collection · Pokibind</title>
+  <meta name="description" content="Toutes tes cartes, regroupées par set.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/collection.js"></script>
+</head>
+<body data-page="collection" data-espace="membre">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="tete-page tete-avec-action">
+      <div class="tete-page">
+        <h1>Ma collection</h1>
+        <p>Toutes les cartes que tu possèdes, regroupées par set.</p>
+      </div>
+      <a class="bouton" href="recherche.html"><span aria-hidden="true">+</span> Ajouter des cartes</a>
+    </div>
+
+    <nav class="onglets" aria-label="Partie de la collection">
+      <a href="collection.html" aria-current="page">Cartes <span class="num" id="onglet-cartes"></span></a>
+      <a href="scelle.html">Scellé <span class="num" id="onglet-scelle"></span></a>
+    </nav>
+
+    <section class="resume-collection" aria-label="Résumé de la collection">
+      <div>
+        <p class="surtitre">Valeur totale</p>
+        <p class="chiffre num" id="valeur-totale">—</p>
+      </div>
+      <div>
+        <p class="surtitre">Cartes</p>
+        <p class="chiffre num" id="nombre-cartes">—</p>
+      </div>
+      <a class="lien-discret" href="statistiques.html">Voir les statistiques <span aria-hidden="true">→</span></a>
+    </section>
+
+    <section class="section" aria-labelledby="titre-sets">
+      <div class="sets-entete">
+        <h2 id="titre-sets">Sets</h2>
+        <div class="puces" id="filtre-series" role="group" aria-label="Série"></div>
+      </div>
+      <ul class="liste-sets" id="liste-sets" aria-busy="true">
+        <li class="carte-set squelette-set" aria-hidden="true"><span class="squelette courte"></span><span class="squelette"></span></li>
+        <li class="carte-set squelette-set" aria-hidden="true"><span class="squelette courte"></span><span class="squelette"></span></li>
+        <li class="carte-set squelette-set" aria-hidden="true"><span class="squelette courte"></span><span class="squelette"></span></li>
+      </ul>
+      <div class="encart" id="collection-vide" hidden>
+        <h3>Ta collection est vide</h3>
+        <p>Cherche une carte, puis ajoute-la en un clic avec le « + ».</p>
+        <a class="bouton bouton-petit" href="recherche.html">Rechercher une carte</a>
+      </div>
+    </section>
+
+    <p class="note-page">La valeur totale additionne tes cartes, au dernier prix Cardmarket connu, et ton scellé, à ta revente estimée. Un set est complet quand tu as toutes ses cartes numérotées ; les cartes secrètes comptent en bonus.</p>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

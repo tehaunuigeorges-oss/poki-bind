@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mon profil · Pokibind</title>
+  <meta name="description" content="Ton profil Pokibind : activité, binders, badges.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/profil.js"></script>
+</head>
+<body data-page="profil" data-espace="membre">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div id="zone-profil" aria-busy="true">
+      <span class="squelette titre"></span>
+      <h1 class="sr-only">Chargement du profil…</h1>
+    </div>
+
+    <dialog class="fenetre" id="fenetre-profil" aria-labelledby="titre-fenetre-profil">
+      <form class="formulaire" id="formulaire-profil" novalidate>
+        <h2 id="titre-fenetre-profil">Modifier le profil</h2>
+        <div class="champ-groupe">
+          <label for="champ-nom">Nom affiché</label>
+          <input class="champ" id="champ-nom" maxlength="40" autocomplete="name" aria-describedby="erreur-champ-nom">
+          <p class="champ-erreur" id="erreur-champ-nom"></p>
+        </div>
+        <div class="champ-groupe">
+          <label for="champ-pseudo">Pseudo</label>
+          <input class="champ" id="champ-pseudo" maxlength="20" autocomplete="username" spellcheck="false" aria-describedby="aide-champ-pseudo erreur-champ-pseudo">
+          <p class="champ-aide" id="aide-champ-pseudo">2 à 20 caractères : lettres sans accent, chiffres, point, tiret ou tiret bas.</p>
+          <p class="champ-erreur" id="erreur-champ-pseudo"></p>
+        </div>
+        <div class="champ-groupe">
+          <label for="champ-bio">Bio</label>
+          <textarea class="champ" id="champ-bio" maxlength="160" rows="3" aria-describedby="aide-champ-bio"></textarea>
+          <p class="champ-aide" id="aide-champ-bio">160 caractères maximum.</p>
+        </div>
+        <fieldset class="choix-couverture">
+          <legend>Bannière</legend>
+          <div class="bannieres-choix" id="bannieres-choix"></div>
+        </fieldset>
+        <fieldset class="choix-couverture">
+          <legend>Cadre de l'avatar</legend>
+          <div class="bannieres-choix" id="cadres-choix"></div>
+          <p class="champ-aide">Les bannières et cadres verrouillés se débloquent dans la <a href="boutique.html">boutique</a>.</p>
+        </fieldset>
+        <div class="champ-groupe" id="groupe-badge">
+          <label for="champ-badge">Badge mis en avant</label>
+          <select class="champ" id="champ-badge"></select>
+        </div>
+        <fieldset class="choix-couverture" id="groupe-favorites">
+          <legend>Cartes favorites (3 au plus)</legend>
+          <div class="favorites-choix">
+            <label class="sr-only" for="favorite-1">Carte favorite 1</label><select class="champ" id="favorite-1"></select>
+            <label class="sr-only" for="favorite-2">Carte favorite 2</label><select class="champ" id="favorite-2"></select>
+            <label class="sr-only" for="favorite-3">Carte favorite 3</label><select class="champ" id="favorite-3"></select>
+          </div>
+        </fieldset>
+        <div class="boutons">
+          <button class="bouton" type="submit" id="enregistrer-profil">Enregistrer</button>
+          <button class="bouton bouton-secondaire" type="button" id="annuler-profil">Annuler</button>
+        </div>
+      </form>
+    </dialog>
+    <p class="annonce" id="annonce" role="status"></p>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

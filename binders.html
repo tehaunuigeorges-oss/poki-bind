@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mes binders · Pokibind</title>
+  <meta name="description" content="Tes classeurs pour exposer tes plus belles cartes.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/binders.js"></script>
+</head>
+<body data-page="binders" data-espace="membre">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="tete-page tete-avec-action">
+      <div class="tete-page">
+        <h1>Mes binders</h1>
+        <p>Tes vitrines pour exposer tes plus belles cartes : tes préférées, un Pokémon, un illustrateur… à toi de choisir.</p>
+      </div>
+      <button class="bouton" id="bouton-nouveau" type="button"><span aria-hidden="true">+</span> Nouveau binder</button>
+    </div>
+
+    <ul class="etagere" id="etagere" aria-label="Mes binders"></ul>
+
+    <section class="binder-ouvert" id="binder-ouvert" aria-labelledby="titre-binder" hidden></section>
+
+    <dialog class="fenetre" id="fenetre-binder" aria-labelledby="titre-fenetre">
+      <form class="formulaire" id="formulaire-binder" novalidate>
+        <h2 id="titre-fenetre">Nouveau binder</h2>
+        <div class="champ-groupe" id="groupe-nom">
+          <label for="nom-binder">Nom du binder</label>
+          <input class="champ" id="nom-binder" maxlength="40" autocomplete="off" aria-describedby="erreur-nom">
+          <p class="champ-erreur" id="erreur-nom"></p>
+        </div>
+        <fieldset class="choix-couverture">
+          <legend>Couverture</legend>
+          <div class="couvertures-choix" id="couvertures-choix"></div>
+          <p class="champ-aide">Les couvertures illustrées se débloquent dans la <a href="boutique.html">boutique</a>.</p>
+        </fieldset>
+        <div class="boutons">
+          <button class="bouton" type="submit" id="bouton-enregistrer">Créer le binder</button>
+          <button class="bouton bouton-secondaire" type="button" id="bouton-annuler">Annuler</button>
+        </div>
+        <button class="lien lien-danger" type="button" id="bouton-supprimer" hidden>Supprimer ce binder</button>
+      </form>
+    </dialog>
+
+    <dialog class="fenetre fenetre-large" id="fenetre-ajout" aria-labelledby="titre-ajout">
+      <div class="fenetre-tete">
+        <h2 id="titre-ajout">Ajouter des cartes</h2>
+        <button class="bouton-icone" type="button" id="fermer-ajout" aria-label="Fermer">×</button>
+      </div>
+      <form class="recherche-ajout" id="formulaire-ajout" role="search" novalidate>
+        <label class="sr-only" for="requete-ajout">Nom ou numéro de la carte</label>
+        <input class="champ" id="requete-ajout" type="search" placeholder="Cherche dans ta collection : Évoli, 074/131…" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      </form>
+      <p class="surtitre num" id="resume-ajout" role="status"></p>
+      <ul class="grille-ajout" id="resultats-ajout"></ul>
+      <button class="bouton bouton-secondaire bouton-petit" id="plus-ajout" type="button" hidden>Voir plus de cartes</button>
+      <div class="fenetre-pied">
+        <p class="champ-aide" id="annonce-ajout" role="status"></p>
+        <button class="bouton" type="button" id="terminer-ajout">Terminé</button>
+      </div>
+    </dialog>
+
+    <p class="annonce" id="annonce" role="status"></p>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

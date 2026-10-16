@@ -1,24 +1,65 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Poki Bind</title>
-    <meta name="description" content="Courte description du site.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pokibind · ton classeur de cartes Pokémon</title>
+  <meta name="description" content="Ton classeur de cartes Pokémon numérique : collection, binders, progression et valeur.">
 
-    <link rel="icon" href="ressources/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="ressources/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="ressources/favicon-16x16.png">
-    <link rel="apple-touch-icon" href="ressources/apple-touch-icon.png">
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-    <meta property="og:title" content="Poki Bind">
-    <meta property="og:description" content="Courte description du site.">
-    <meta property="og:image" content="ressources/image-de-partage.png">
-    <meta property="og:type" content="website">
+  <meta property="og:title" content="Pokibind">
+  <meta property="og:description" content="Ton classeur de cartes Pokémon numérique : collection, binders, progression et valeur.">
+  <meta property="og:image" content="https://poki-bind.netlify.app/img/partage/image-de-partage.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://poki-bind.netlify.app/">
+  <meta property="og:locale" content="fr_FR">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://poki-bind.netlify.app/">
+  <meta property="og:type" content="website">
 
-    <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
 </head>
-<body>
+<body data-page="accueil" data-espace="visiteur">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
 
+  <main class="wrap accueil" id="contenu">
+    <section class="hero" aria-labelledby="titre-accueil">
+      <div class="anneau">
+        <img class="logo" src="img/logos/logo-principal.png" alt="Pokibind" width="600" height="413" fetchpriority="high">
+        <img class="energie" src="img/energies/energie-incolore.png" alt="" width="128" height="128" style="--x: 0%; --y: -44.5%">
+        <img class="energie" src="img/energies/energie-dragon.png" alt="" width="128" height="128" style="--x: 24.06%; --y: -37.44%">
+        <img class="energie" src="img/energies/energie-combat.png" alt="" width="128" height="128" style="--x: 40.48%; --y: -18.49%">
+        <img class="energie" src="img/energies/energie-eau.png" alt="" width="128" height="128" style="--x: 44.05%; --y: 6.33%">
+        <img class="energie" src="img/energies/energie-psy.png" alt="" width="128" height="128" style="--x: 33.63%; --y: 29.14%">
+        <img class="energie" src="img/energies/energie-obscurite.png" alt="" width="128" height="128" style="--x: 12.54%; --y: 42.7%">
+        <img class="energie" src="img/energies/energie-feu.png" alt="" width="128" height="128" style="--x: -12.54%; --y: 42.7%">
+        <img class="energie" src="img/energies/energie-fee.png" alt="" width="128" height="128" style="--x: -33.63%; --y: 29.14%">
+        <img class="energie" src="img/energies/energie-metal.png" alt="" width="128" height="128" style="--x: -44.05%; --y: 6.33%">
+        <img class="energie" src="img/energies/energie-plante.png" alt="" width="128" height="128" style="--x: -40.48%; --y: -18.49%">
+        <img class="energie" src="img/energies/energie-electrique.png" alt="" width="128" height="128" style="--x: -24.06%; --y: -37.44%">
+      </div>
+
+      <h1 id="titre-accueil">Ton classeur de cartes Pokémon, en numérique</h1>
+      <p>Range ta collection set par set, suis sa valeur et expose tes plus belles cartes dans des binders.</p>
+      <div class="boutons boutons-hero">
+        <a class="bouton" href="connexion.html">Se connecter</a>
+        <a class="bouton bouton-secondaire" href="a-propos.html">En savoir plus</a>
+      </div>
+      <small>Pas encore de compte ? <a href="connexion.html?mode=inscription">Créer un compte</a></small>
+    </section>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
 </body>
 </html>

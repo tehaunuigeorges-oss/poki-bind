@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Set · Pokibind</title>
+  <meta name="description" content="Toutes les cartes d'un set, possédées et manquantes.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/set.js"></script>
+</head>
+<body data-page="set" data-espace="membre">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="set-page" id="set-page" aria-busy="true">
+      <span class="squelette courte"></span>
+      <span class="squelette titre"></span>
+      <span class="squelette"></span>
+      <h1 class="sr-only">Chargement du set…</h1>
+    </div>
+    <p class="annonce" id="annonce" role="status"></p>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

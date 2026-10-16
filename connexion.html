@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Connexion · Pokibind</title>
+  <meta name="description" content="Connecte-toi ou crée ton compte Pokibind.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/connexion.js"></script>
+</head>
+<body data-page="connexion" data-espace="visiteur">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="auth-zone">
+      <div class="auth" id="auth" data-mode="connexion">
+        <img class="logo auth-logo" src="img/logos/logo-principal.png" alt="" width="600" height="413">
+        <h1 class="sr-only" id="titre-auth">Se connecter à Pokibind</h1>
+
+        <!-- Étape 1 : identifiants -->
+        <div class="auth-etape" id="etape-identifiants">
+          <div class="segments" role="group" aria-label="Connexion ou création de compte">
+            <button type="button" data-choix-mode="connexion" aria-pressed="true">Se connecter</button>
+            <button type="button" data-choix-mode="inscription" aria-pressed="false">Créer un compte</button>
+          </div>
+
+          <button class="bouton bouton-secondaire bouton-large" type="button" id="bouton-google">
+            <span class="marque-google" aria-hidden="true">G</span>Continuer avec Google
+          </button>
+
+          <p class="separateur">ou avec ton email</p>
+
+          <form class="formulaire" id="formulaire-identifiants" novalidate>
+            <div class="champ-groupe" data-pour="inscription" hidden>
+              <label for="pseudo">Pseudo</label>
+              <input class="champ" id="pseudo" name="pseudo" type="text" autocomplete="nickname" maxlength="24"
+                     placeholder="Ton pseudo de collectionneur" aria-describedby="erreur-pseudo" disabled>
+              <p class="champ-erreur" id="erreur-pseudo"></p>
+            </div>
+
+            <div class="champ-groupe">
+              <label for="email">Email</label>
+              <input class="champ" id="email" name="email" type="email" autocomplete="username"
+                     placeholder="ton@email.fr" aria-describedby="erreur-email">
+              <p class="champ-erreur" id="erreur-email"></p>
+            </div>
+
+            <div class="champ-groupe">
+              <label for="mot-de-passe">Mot de passe</label>
+              <input class="champ" id="mot-de-passe" name="mot-de-passe" type="password" autocomplete="current-password"
+                     placeholder="••••••••" aria-describedby="erreur-mot-de-passe">
+              <p class="champ-aide" id="aide-mot-de-passe" data-pour="inscription" hidden>8 caractères minimum, avec au moins un chiffre.</p>
+              <p class="champ-erreur" id="erreur-mot-de-passe"></p>
+            </div>
+
+            <div class="auth-ligne" data-pour="connexion">
+              <label class="case"><input type="checkbox" id="rester" name="rester" checked> Rester connecté</label>
+              <button class="lien" type="button" id="bouton-oubli">Mot de passe oublié ?</button>
+            </div>
+
+            <div class="champ-groupe" data-pour="inscription" hidden>
+              <label class="case">
+                <input type="checkbox" id="conditions" name="conditions" aria-describedby="erreur-conditions" disabled>
+                <span>J'accepte les <a href="mentions-legales.html#conditions">conditions d'utilisation</a> et la <a href="mentions-legales.html#confidentialite">politique de confidentialité</a>.</span>
+              </label>
+              <p class="champ-erreur" id="erreur-conditions"></p>
+            </div>
+
+            <p class="auth-info" id="info-identifiants" role="status"></p>
+            <button class="bouton bouton-large" type="submit" id="bouton-valider">Se connecter</button>
+          </form>
+
+          <p class="auth-bas" data-pour="connexion">Pas encore de compte ? <button class="lien" type="button" data-choix-mode="inscription">Créer un compte</button></p>
+          <p class="auth-bas" data-pour="inscription" hidden>Déjà un compte ? <button class="lien" type="button" data-choix-mode="connexion">Se connecter</button></p>
+        </div>
+
+        <!-- Étape 2 : code de sécurité (double authentification) -->
+        <form class="auth-etape" id="etape-code" novalidate hidden>
+          <h2>Vérifie que c'est bien toi</h2>
+          <p class="auth-sous-titre">Entre le code à 6 chiffres affiché dans ton application d'authentification.</p>
+          <fieldset class="code">
+            <legend class="sr-only">Code de sécurité à 6 chiffres</legend>
+            <input type="text" inputmode="numeric" autocomplete="one-time-code" aria-label="Chiffre 1 sur 6" aria-describedby="erreur-code">
+            <input type="text" inputmode="numeric" autocomplete="off" aria-label="Chiffre 2 sur 6" aria-describedby="erreur-code">
+            <input type="text" inputmode="numeric" autocomplete="off" aria-label="Chiffre 3 sur 6" aria-describedby="erreur-code">
+            <input type="text" inputmode="numeric" autocomplete="off" aria-label="Chiffre 4 sur 6" aria-describedby="erreur-code">
+            <input type="text" inputmode="numeric" autocomplete="off" aria-label="Chiffre 5 sur 6" aria-describedby="erreur-code">
+            <input type="text" inputmode="numeric" autocomplete="off" aria-label="Chiffre 6 sur 6" aria-describedby="erreur-code">
+          </fieldset>
+          <p class="champ-erreur" id="erreur-code"></p>
+          <button class="bouton bouton-large" type="submit">Valider</button>
+          <p class="auth-bas">Pas accès à ton application ? <button class="lien" type="button" id="bouton-secours">Utiliser un code de secours</button></p>
+          <p class="auth-info" id="info-code" role="status"></p>
+          <button class="lien auth-retour" type="button" id="bouton-retour">← Retour</button>
+        </form>
+      </div>
+
+      <p class="note-auth">Version de test : ton compte reste dans ce navigateur, rien n'est envoyé.</p>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

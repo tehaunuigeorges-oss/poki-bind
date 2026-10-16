@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <!-- Netlify affiche cette page pour toute adresse inconnue, même dans un sous-dossier :
+       la base fait partir tous les liens relatifs de la racine du site. -->
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Page introuvable · Pokibind</title>
+  <meta name="description" content="Cette page n'existe pas sur Pokibind.">
+  <meta name="robots" content="noindex">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+</head>
+<body data-page="404" data-espace="visiteur">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap page-introuvable" id="contenu">
+    <img class="introuvable-image" src="img/energies/energie-psy.png" alt="" width="96" height="96">
+    <p class="introuvable-code num" aria-hidden="true">404</p>
+    <h1>Cette page n'existe pas</h1>
+    <p>Le lien est peut-être cassé, ou la page a changé d'adresse.</p>
+    <div class="boutons">
+      <a class="bouton" href="index.html">Retour à l'accueil</a>
+      <a class="bouton bouton-secondaire" href="recherche.html">Rechercher une carte</a>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>

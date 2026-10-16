@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Statistiques · Pokibind</title>
+  <meta name="description" content="La valeur et la composition de ta collection.">
+
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/statistiques.js"></script>
+</head>
+<body data-page="statistiques" data-espace="membre">
+  <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+  <header class="entete" id="entete"></header>
+
+  <main class="wrap" id="contenu">
+    <div class="tete-page">
+      <h1>Statistiques</h1>
+      <p>La valeur et la composition de ta collection, mises à jour chaque jour avec les prix Cardmarket.</p>
+      <p class="maj-prix" id="maj-prix" role="status"></p>
+    </div>
+
+    <div class="encart" id="stats-vide" hidden>
+      <h2>Pas encore de statistiques</h2>
+      <p>Ajoute des cartes à ta collection : leur valeur et leur répartition apparaîtront ici.</p>
+      <a class="bouton bouton-petit" href="recherche.html">Rechercher une carte</a>
+    </div>
+
+    <div class="stats" id="stats" aria-busy="true">
+      <section class="kpis" aria-label="Résumé">
+        <div class="kpi">
+          <p class="surtitre">Valeur totale</p>
+          <p class="chiffre num" id="kpi-total">—</p>
+          <p class="kpi-detail num" id="kpi-total-detail"></p>
+        </div>
+        <div class="kpi">
+          <p class="surtitre avec-pastille"><span class="pastille serie-cartes" aria-hidden="true"></span>Valeur cartes</p>
+          <p class="chiffre num" id="kpi-cartes">—</p>
+          <p class="kpi-detail num" id="kpi-cartes-detail"></p>
+        </div>
+        <div class="kpi">
+          <p class="surtitre avec-pastille"><span class="pastille serie-scelle" aria-hidden="true"></span>Valeur scellé</p>
+          <p class="chiffre num" id="kpi-scelle">—</p>
+          <p class="kpi-detail num" id="kpi-scelle-detail"></p>
+        </div>
+        <div class="kpi">
+          <p class="surtitre">Sets complétés</p>
+          <p class="chiffre num" id="kpi-sets">—</p>
+          <p class="kpi-detail num" id="kpi-sets-detail"></p>
+        </div>
+      </section>
+
+      <section class="panneau" aria-labelledby="titre-evolution">
+        <div class="repartition" id="repartition"></div>
+        <div class="panneau-tete">
+          <h2 id="titre-evolution">Évolution de la valeur</h2>
+          <div class="segments" role="group" aria-label="Période" id="periodes">
+            <button type="button" data-jours="30" aria-pressed="false">30 jours</button>
+            <button type="button" data-jours="182" aria-pressed="false">6 mois</button>
+            <button type="button" data-jours="365" aria-pressed="true">12 mois</button>
+          </div>
+        </div>
+        <div class="graphique" id="graphique"></div>
+      </section>
+
+      <div class="panneaux">
+        <section class="panneau" aria-labelledby="titre-top-sets">
+          <div class="panneau-tete"><h2 id="titre-top-sets">Top 6 des sets</h2><span class="surtitre">nombre de cartes</span></div>
+          <ul class="barres" id="barres-sets"></ul>
+        </section>
+        <section class="panneau" aria-labelledby="titre-types">
+          <div class="panneau-tete"><h2 id="titre-types">Par type d'énergie</h2><span class="surtitre">cartes Pokémon</span></div>
+          <ul class="barres" id="barres-types"></ul>
+        </section>
+        <section class="panneau" aria-labelledby="titre-raretes">
+          <div class="panneau-tete"><h2 id="titre-raretes">Par rareté</h2><span class="surtitre">nombre de cartes</span></div>
+          <ul class="barres" id="barres-raretes"></ul>
+        </section>
+        <section class="panneau" aria-labelledby="titre-complets">
+          <div class="panneau-tete"><h2 id="titre-complets">Sets complétés</h2><span class="surtitre num" id="complets-compte"></span></div>
+          <ul class="liste-complets" id="liste-complets"></ul>
+        </section>
+      </div>
+
+      <section class="panneau" aria-labelledby="titre-cheres">
+        <div class="panneau-tete"><h2 id="titre-cheres">Tes cartes les plus chères</h2><span class="surtitre">tendance Cardmarket</span></div>
+        <div class="tableau-defilant">
+          <table class="tableau" id="cartes-cheres">
+            <thead><tr><th scope="col"><span class="sr-only">Image</span></th><th scope="col">Carte</th><th scope="col">Set</th><th scope="col" class="nombre">Prix</th><th scope="col" class="nombre">30 jours</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p class="note-page">Les prix sont la tendance Cardmarket de chaque variante que tu possèdes, relevée au plus une fois par jour. Les cartes sans prix comptent pour 0 €. La variation sur 30 jours compare cette tendance à la moyenne des ventes des 30 derniers jours. La courbe se remplit jour après jour, à chaque visite de cette page.</p>
+    </div>
+  </main>
+
+  <footer class="pied" id="pied"></footer>
+</body>
+</html>
