@@ -115,6 +115,7 @@ export function messageErreur(erreur) {
   if (code === "weak_password" || texte.includes("password should")) return "Mot de passe trop faible : choisis-en un plus long, avec des lettres et des chiffres.";
   if (code === "same_password") return "Choisis un mot de passe différent de l'ancien.";
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || texte.includes("rate limit")) return "Trop de tentatives. Attends quelques minutes avant de réessayer.";
+  if (texte.includes("error sending")) return "L'email n'a pas pu être envoyé. Réessaie plus tard ou utilise « Continuer avec Google ».";
   if (texte.includes("failed to fetch") || texte.includes("network")) return "Connexion impossible : vérifie ta connexion internet.";
   if (code === "validation_failed" && texte.includes("provider")) return "La connexion avec Google n'est pas encore activée.";
   return "Une erreur est survenue. Réessaie dans un instant.";
