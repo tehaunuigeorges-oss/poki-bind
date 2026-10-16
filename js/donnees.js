@@ -282,3 +282,60 @@ export async function enregistrerValeur({ cartes, scelle }) {
   ecrire("historique", historique.slice(-JOURS_GARDES));
   return historique;
 }
+
+// ---------- Chase cards ----------
+// chase : { budget: nombre ou null, cartes: [{ id, nom, numero, image, set, langue, variante,
+//           prixMax, priorite: "haute" | "moyenne" | "basse", prix, prixLe, ajouteeLe }] }
+// « prix » : dernière tendance Cardmarket connue de la variante cherchée (null si inconnue).
+// Une chase card est « trouvée » dès que la carte est dans la collection.
+
+export const PRIORITES = [
+  { cle: "haute", nom: "Priorité haute" },
+  { cle: "moyenne", nom: "Priorité moyenne" },
+  { cle: "basse", nom: "Priorité basse" },
+];
+
+function lireChase() {
+  const chase = lire("chase", {});
+  return { budget: typeof chase.budget === "number" ? chase.budget : null, cartes: Array.isArray(chase.cartes) ? chase.cartes : [] };
+}
+
+export async function getChaseCards() {
+  return lireChase();
+}
+
+export async function getChaseCard(id) {
+  return lireChase().cartes.find((carte) => carte.id === id) ?? null;
+}
+
+// Ajoute la carte, ou remplace ses réglages si elle est déjà suivie.
+export async function enregistrerChaseCard(carte) {
+  const chase = lireChase();
+  const ancienne = chase.cartes.find((c) => c.id === carte.id);
+  const nouvelle = { ...carte, ajouteeLe: ancienne?.ajouteeLe ?? new Date().toISOString() };
+  chase.cartes = ancienne ? chase.cartes.map((c) => (c.id === carte.id ? nouvelle : c)) : [...chase.cartes, nouvelle];
+  ecrire("chase", chase);
+  return nouvelle;
+}
+
+// changements : { prixMax, priorite, prix, prixLe… }
+export async function modifierChaseCard(id, changements) {
+  const chase = lireChase();
+  const carte = chase.cartes.find((c) => c.id === id);
+  if (!carte) return null;
+  Object.assign(carte, changements);
+  ecrire("chase", chase);
+  return carte;
+}
+
+export async function retirerChaseCard(id) {
+  const chase = lireChase();
+  chase.cartes = chase.cartes.filter((c) => c.id !== id);
+  ecrire("chase", chase);
+}
+
+export async function choisirBudgetChase(budget) {
+  const chase = lireChase();
+  chase.budget = budget;
+  ecrire("chase", chase);
+}

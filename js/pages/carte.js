@@ -3,7 +3,7 @@
 
 import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, getSerie, ErreurTcgdex } from "../tcgdex.js";
 import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte, nombreDeCartes, nombreExemplaires,
-  placementsDe, ErreurBinder } from "../donnees.js";
+  placementsDe, ErreurBinder, getChaseCard, enregistrerChaseCard, retirerChaseCard } from "../donnees.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
 
@@ -28,6 +28,7 @@ let carte = null;    // réponse de TCGdex
 let variantes = [];  // voir variantesDeCarte dans tcgdex.js
 let entree = null;   // la carte dans la collection, ou null
 let choisie = "";    // variante affichée dans l'encadré des prix
+let suivie = null;   // la carte dans les chase cards, ou null
 
 const icone = (dessin) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${dessin}</svg>`;
@@ -207,11 +208,12 @@ function afficher(set, serie) {
         <div class="boutons fiche-actions">
           <button class="bouton" id="bouton-ajouter" type="button"><span aria-hidden="true">+</span> Ajouter à ma collection</button>
           <button class="bouton bouton-secondaire" id="bouton-binder" type="button">Placer dans un binder</button>
-          <button class="bouton bouton-secondaire" id="bouton-chase" type="button"><span aria-hidden="true">☆</span> Ajouter aux chase cards</button>
+          <button class="bouton bouton-secondaire" id="bouton-chase" type="button"></button>
         </div>
       </div>
     </div>`;
   majQuantites();
+  majBoutonChase();
   choisir(choisie);
 }
 
@@ -275,6 +277,91 @@ document.getElementById("formulaire-placer").addEventListener("submit", async (e
 });
 document.getElementById("bouton-annuler-placer").addEventListener("click", () => fenetrePlacer.close());
 
+// ---------- Chase cards : la carte recherchée, ton prix max et ta priorité ----------
+
+const fenetreChase = document.getElementById("fenetre-chase");
+const champVariante = document.getElementById("chase-variante");
+const champPrixMax = document.getElementById("chase-prix-max");
+const erreurPrixMax = document.getElementById("erreur-prix-max");
+
+function majBoutonChase() {
+  const bouton = document.getElementById("bouton-chase");
+  bouton.innerHTML = suivie
+    ? '<span aria-hidden="true">★</span> Dans tes chase cards'
+    : '<span aria-hidden="true">☆</span> Ajouter aux chase cards';
+}
+
+function prixDe(cle) {
+  return variantes.find((v) => v.cle === cle)?.prix?.tendance ?? null;
+}
+
+function majPrixActuel() {
+  const prix = prixDe(champVariante.value);
+  document.getElementById("chase-prix-actuel").textContent = prix
+    ? `Prix actuel : ${formaterPrix(prix)} (tendance Cardmarket).`
+    : "Prix actuel indisponible pour cette variante.";
+}
+
+function ouvrirFenetreChase() {
+  const existantes = variantes.filter((v) => v.existe);
+  const variante = suivie?.variante ?? choisie;
+  champVariante.innerHTML = existantes.map((v) => `<option value="${v.cle}"${v.cle === variante ? " selected" : ""}>${v.nom}</option>`).join("");
+  const prix = prixDe(champVariante.value);
+  champPrixMax.value = suivie?.prixMax ?? (prix ? Math.ceil(prix) : "");
+  champPrixMax.removeAttribute("aria-invalid");
+  erreurPrixMax.textContent = "";
+  fenetreChase.querySelector(`input[name=priorite][value="${suivie?.priorite ?? "moyenne"}"]`).checked = true;
+  document.getElementById("titre-chase").textContent = suivie ? "Modifier la chase card" : "Ajouter aux chase cards";
+  document.getElementById("aide-chase").textContent = entree
+    ? "Tu as déjà cette carte : elle sera rangée dans « Trouvées »."
+    : "Fixe ton prix maximum : la page Chase cards te montre quand le prix passe en dessous.";
+  document.getElementById("bouton-chase-enregistrer").textContent = suivie ? "Enregistrer" : "Ajouter";
+  document.getElementById("bouton-chase-retirer").hidden = !suivie;
+  majPrixActuel();
+  fenetreChase.showModal();
+  champPrixMax.focus();
+}
+
+champVariante.addEventListener("change", majPrixActuel);
+
+document.getElementById("formulaire-chase").addEventListener("submit", async (evenement) => {
+  evenement.preventDefault();
+  const prixMax = Number(String(champPrixMax.value).replace(",", "."));
+  if (!champPrixMax.value || !(prixMax > 0)) {
+    erreurPrixMax.textContent = "Indique un prix maximum supérieur à 0 €.";
+    champPrixMax.setAttribute("aria-invalid", "true");
+    champPrixMax.focus();
+    return;
+  }
+  const resume = resumeCarte(carte);
+  const variante = champVariante.value;
+  try {
+    suivie = await enregistrerChaseCard({
+      id: resume.id, nom: resume.nom, numero: resume.numero, image: resume.image, set: resume.set, langue: resume.langue,
+      variante, prixMax: Math.round(prixMax * 100) / 100,
+      priorite: fenetreChase.querySelector("input[name=priorite]:checked").value,
+      prix: prixDe(variante), prixLe: new Date().toISOString(),
+    });
+  } catch (erreur) {
+    erreurPrixMax.textContent = "Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.";
+    return;
+  }
+  fenetreChase.close();
+  majBoutonChase();
+  annoncer(`${carte.name} est dans tes chase cards, prix max ${formaterPrix(suivie.prixMax)}.`);
+  document.getElementById("bouton-chase").focus();
+});
+
+document.getElementById("bouton-chase-annuler").addEventListener("click", () => fenetreChase.close());
+document.getElementById("bouton-chase-retirer").addEventListener("click", async () => {
+  await retirerChaseCard(carte.id);
+  suivie = null;
+  fenetreChase.close();
+  majBoutonChase();
+  annoncer(`${carte.name} n'est plus dans tes chase cards.`);
+  document.getElementById("bouton-chase").focus();
+});
+
 // ---------- Actions ----------
 
 async function changerQuantite(cle, difference) {
@@ -311,7 +398,7 @@ zone.addEventListener("click", (evenement) => {
   else if (retirer) changerQuantite(retirer, -1);
   else if (bouton.id === "bouton-ajouter") changerQuantite(choisie, 1);
   else if (bouton.id === "bouton-binder") ouvrirFenetrePlacer();
-  else if (bouton.id === "bouton-chase") annoncer("Les chase cards arrivent à l'étape 8.");
+  else if (bouton.id === "bouton-chase") ouvrirFenetreChase();
   else if (bouton.id === "bouton-reessayer") charger();
 });
 
@@ -325,13 +412,15 @@ async function charger() {
   zone.setAttribute("aria-busy", "true");
   zone.innerHTML = squelette;
   try {
-    const [donnees, set, possedee] = await Promise.all([
+    const [donnees, set, possedee, chase] = await Promise.all([
       getCarte(id),
       getSet(setDeCarte(id)).catch(() => null), // sans le set, la fiche s'affiche sans série ni date
       getCarteDeCollection(id),
+      getChaseCard(id),
     ]);
     carte = donnees;
     entree = possedee;
+    suivie = chase;
     variantes = variantesDeCarte(carte);
     const existantes = variantes.filter((v) => v.existe);
     choisie = (existantes.find((v) => entree?.variantes[v.cle]) ?? existantes[0]).cle;

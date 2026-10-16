@@ -48,6 +48,33 @@
         </div>
       </form>
     </dialog>
+    <dialog class="fenetre" id="fenetre-chase" aria-labelledby="titre-chase">
+      <form class="formulaire" id="formulaire-chase" novalidate>
+        <h2 id="titre-chase">Ajouter aux chase cards</h2>
+        <p class="champ-aide" id="aide-chase"></p>
+        <div class="champ-groupe">
+          <label for="chase-variante">Variante cherchée</label>
+          <select class="champ" id="chase-variante"></select>
+        </div>
+        <div class="champ-groupe">
+          <label for="chase-prix-max">Ton prix maximum (€)</label>
+          <input class="champ num" id="chase-prix-max" type="number" inputmode="decimal" min="0" step="0.01" aria-describedby="chase-prix-actuel erreur-prix-max">
+          <p class="champ-aide" id="chase-prix-actuel"></p>
+          <p class="champ-erreur" id="erreur-prix-max"></p>
+        </div>
+        <fieldset class="liste-choix">
+          <legend class="champ-legende">Priorité</legend>
+          <label class="case"><input type="radio" name="priorite" value="haute"><span>Haute</span></label>
+          <label class="case"><input type="radio" name="priorite" value="moyenne" checked><span>Moyenne</span></label>
+          <label class="case"><input type="radio" name="priorite" value="basse"><span>Basse</span></label>
+        </fieldset>
+        <div class="boutons">
+          <button class="bouton" type="submit" id="bouton-chase-enregistrer">Ajouter</button>
+          <button class="bouton bouton-secondaire" type="button" id="bouton-chase-annuler">Annuler</button>
+        </div>
+        <button class="lien lien-danger" type="button" id="bouton-chase-retirer" hidden>Retirer des chase cards</button>
+      </form>
+    </dialog>
     <p class="annonce" id="annonce" role="status"></p>
   </main>
 
