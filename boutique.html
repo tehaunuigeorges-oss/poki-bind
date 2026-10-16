@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/entete.js"></script>
+  <script type="module" src="js/pages/boutique.js"></script>
 </head>
 <body data-page="boutique" data-espace="membre">
   <script>try{if(localStorage.getItem("pokibind-theme")==="dark")document.body.classList.add("dark")}catch(e){}</script>
@@ -23,10 +24,37 @@
   <header class="entete" id="entete"></header>
 
   <main class="wrap" id="contenu">
-    <div class="tete-page">
-      <h1>Boutique</h1>
-      <p>Cette page arrive à l'étape 10.</p>
-    </div>
+    <section class="bientot" aria-labelledby="titre-boutique">
+      <div class="bientot-texte">
+        <p class="pilule bientot-pilule"><span class="point" aria-hidden="true"></span> Bientôt disponible</p>
+        <h1 id="titre-boutique">La boutique arrive</h1>
+        <p>Tu pourras dépenser tes pièces pour débloquer des couvertures de binders, des cadres de profil et des bannières. Continue à remplir ta collection : tes pièces t'attendront.</p>
+        <p class="avec-illustration solde num"><img src="img/badges/piece.webp" alt="" width="20" height="20"><span id="solde">Tu as déjà 0 pièce</span></p>
+        <form class="prevenir" id="formulaire-prevenir" novalidate>
+          <label class="sr-only" for="email-prevenir">Ton email</label>
+          <input class="champ" id="email-prevenir" type="email" autocomplete="email" placeholder="ton@email.fr" aria-describedby="message-prevenir">
+          <button class="bouton" type="submit">Me prévenir</button>
+        </form>
+        <p class="champ-aide" id="message-prevenir" role="status"></p>
+      </div>
+      <ul class="bientot-objets" aria-label="Exemples d'objets à venir">
+        <li><img class="objet-couverture" src="img/binders/vitrail-couverture.webp" alt="" loading="lazy"><span>Couverture Vitrail</span><span class="avec-illustration num"><img src="img/badges/piece.webp" alt="" width="16" height="16">???</span></li>
+        <li><span class="objet-cadre" aria-hidden="true">Cadre</span><span>Cadre doré</span><span class="avec-illustration num"><img src="img/badges/piece.webp" alt="" width="16" height="16">???</span></li>
+        <li><span class="objet-banniere" aria-hidden="true"></span><span>Bannière Aurore</span><span class="avec-illustration num"><img src="img/badges/piece.webp" alt="" width="16" height="16">???</span></li>
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="titre-gagner">
+      <h2 id="titre-gagner">Comment gagner des pièces</h2>
+      <ul class="gains" id="gains"></ul>
+    </section>
+
+    <section class="section" aria-labelledby="titre-couvertures">
+      <h2 id="titre-couvertures">Couvertures de binders à venir</h2>
+      <ul class="etagere" id="couvertures-a-venir"></ul>
+    </section>
+
+    <p class="note-page">Montants provisoires, à fixer à l'ouverture de la boutique.</p>
   </main>
 
   <footer class="pied" id="pied"></footer>

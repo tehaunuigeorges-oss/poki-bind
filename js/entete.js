@@ -4,6 +4,7 @@
 
 import { brancherBoutonTheme } from "./theme.js";
 import { estConnecte, getProfil, getPieces } from "./donnees.js";
+import { verifierRecompenses } from "./recompenses.js";
 import { echapper, formaterNombre, initiales } from "./outils.js";
 
 const icone = (dessin, classe = "") =>
@@ -76,6 +77,22 @@ const piedDePage = `<div class="wrap pied-contenu">
 // Page actuelle avec ses paramètres, pour y revenir après la connexion (ex. « set.html?id=sv08.5 »)
 const pageActuelle = () => location.pathname.split("/").pop() + location.search;
 
+function annoncerRecompenses(nouveautes) {
+  let zone = document.getElementById("annonce");
+  if (!zone) {
+    zone = document.createElement("p");
+    zone.className = "annonce";
+    zone.id = "annonce";
+    zone.setAttribute("role", "status");
+    document.getElementById("contenu")?.append(zone);
+  }
+  // Laisse le temps aux lecteurs d'écran de repérer la zone avant d'y écrire
+  setTimeout(() => {
+    zone.textContent = nouveautes.join(" · ");
+    setTimeout(() => { if (zone.textContent === nouveautes.join(" · ")) zone.textContent = ""; }, 6000);
+  }, 300);
+}
+
 async function afficher() {
   const connecte = await estConnecte();
 
@@ -92,8 +109,16 @@ async function afficher() {
 
   const entete = document.getElementById("entete");
   if (espace === "membre") {
-    const [profil, pieces] = await Promise.all([getProfil(), getPieces()]);
-    entete.innerHTML = enteteMembre(profil, pieces);
+    // Connexion du jour, badges et sets complétés : les pièces gagnées s'affichent dans un petit message
+    let pieces;
+    let nouveautes = [];
+    try {
+      ({ pieces, nouveautes } = await verifierRecompenses());
+    } catch (erreur) {
+      pieces = await getPieces().catch(() => 0);
+    }
+    entete.innerHTML = enteteMembre(await getProfil(), pieces);
+    if (nouveautes.length) annoncerRecompenses(nouveautes);
   } else {
     entete.innerHTML = enteteVisiteur(connecte);
   }

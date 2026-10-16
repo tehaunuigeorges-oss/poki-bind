@@ -58,17 +58,65 @@ export async function seDeconnecter() {
   }
 }
 
-// ---------- Profil ----------
+// La session en cours (email et pseudo saisis à la connexion), ou null.
+export async function getSession() {
+  return lireSession();
+}
 
-// null tant que le profil n'a pas été créé (étape 10).
+// ---------- Profil ----------
+// profil : { pseudo, nom, bio, banniere, badge, favorites: [résumé de carte, …] (3 au plus), visibilite, creeLe }
+// null tant que l'utilisateur ne l'a pas créé (à sa première visite de la page Profil).
+
 export async function getProfil() {
   return lire("profil", null);
 }
 
-// ---------- Pièces ----------
+export async function enregistrerProfil(profil) {
+  const actuel = lire("profil", null);
+  const nouveau = { visibilite: "prive", favorites: [], ...actuel, ...profil, creeLe: actuel?.creeLe ?? new Date().toISOString() };
+  ecrire("profil", nouveau);
+  return nouveau;
+}
+
+// ---------- Pièces et récompenses ----------
+// recompenses : { pieces, jours: ["2026-10-16", …], serie, meilleureSerie, obtenus: { cle: date }, journal: [{ date, cle, texte, pieces }] }
+// Les règles (montants, badges) sont dans js/recompenses.js.
+
+export async function getRecompenses() {
+  const recompenses = lire("recompenses", {});
+  return {
+    pieces: typeof recompenses.pieces === "number" ? recompenses.pieces : 0,
+    jours: Array.isArray(recompenses.jours) ? recompenses.jours : [],
+    serie: recompenses.serie ?? 0,
+    meilleureSerie: recompenses.meilleureSerie ?? 0,
+    obtenus: recompenses.obtenus ?? {},
+    journal: Array.isArray(recompenses.journal) ? recompenses.journal : [],
+  };
+}
+
+export async function enregistrerRecompenses(recompenses) {
+  ecrire("recompenses", { ...recompenses, jours: recompenses.jours.slice(-400), journal: recompenses.journal.slice(-200) });
+}
 
 export async function getPieces() {
-  return lire("pieces", 0);
+  return (await getRecompenses()).pieces;
+}
+
+// ---------- Suppression de toutes les données ----------
+// Efface tout ce que Pokibind garde pour cet utilisateur (sauf le choix du thème), puis la session.
+
+export async function supprimerMesDonnees() {
+  const cles = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const cle = localStorage.key(i);
+    if (cle?.startsWith(PREFIXE) && cle !== `${PREFIXE}theme`) cles.push(cle);
+  }
+  for (const cle of cles) localStorage.removeItem(cle);
+  try {
+    for (const cle of Object.keys(sessionStorage)) if (cle.startsWith(PREFIXE)) sessionStorage.removeItem(cle);
+  } catch (erreur) {
+    // sessionStorage indisponible : rien à effacer.
+  }
 }
 
 // ---------- Collection ----------
