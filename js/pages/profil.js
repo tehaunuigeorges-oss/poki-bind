@@ -86,6 +86,11 @@ function activite() {
       <div class="activite-cartes">${miniCarte(carte)}</div>` });
   }
   for (const ligne of recompenses.journal) {
+    if (ligne.cle === "bienvenue") {
+      evenements.push({ date: ligne.date, html: `<p>a rejoint Pokibind.</p>
+        <span class="activite-badge"><img class="image-badge" src="img/badges/piece.webp" alt="" width="40" height="40"><span><b>Cadeau de bienvenue</b><small>+${formaterNombre(ligne.pieces)} pièces</small></span></span>` });
+      continue;
+    }
     if (ligne.cle?.startsWith("achat:")) {
       evenements.push({ date: ligne.date, html: `<p>a débloqué <b>${echapper(ligne.texte)}</b> dans la boutique.</p>
         <span class="activite-badge"><img class="image-badge" src="img/badges/piece.webp" alt="" width="40" height="40"><span><b>Achat</b><small>${formaterNombre(ligne.pieces)} pièces</small></span></span>` });

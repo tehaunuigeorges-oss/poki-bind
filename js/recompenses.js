@@ -7,6 +7,7 @@ import { getRecompenses, enregistrerRecompenses, getCollection, nombreExemplaire
 import { estOfficielle } from "./tcgdex.js";
 
 export const GAINS = {
+  bienvenue: 300,     // une seule fois, à la toute première connexion
   connexion: 10,      // par jour de connexion
   setComplete: 200,   // par set terminé
 };
@@ -88,6 +89,12 @@ async function verifier() {
     recompenses.journal.push({ date: new Date().toISOString(), cle, texte, pieces });
     nouveautes.push(pieces ? `${texte} : +${pieces} pièces` : texte);
   };
+
+  // Cadeau de bienvenue : la toute première visite de l'espace membre (une seule fois)
+  if (recompenses.jours.length === 0 && !recompenses.obtenus.bienvenue) {
+    recompenses.obtenus.bienvenue = jour;
+    gagner("bienvenue", "Bienvenue sur Pokibind", GAINS.bienvenue);
+  }
 
   // Connexion du jour et série de jours d'affilée
   if (!recompenses.jours.includes(jour)) {

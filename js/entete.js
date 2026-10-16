@@ -72,6 +72,14 @@ function enteteMembre(profil, pieces) {
 
 const piedDePage = `<div class="wrap pied-contenu">
     <p>Pokibind est un site de fans, non officiel, non affilié à Nintendo, Creatures, GAME FREAK ou The Pokémon Company.</p>
+    <nav aria-label="Informations légales">
+      <ul class="liens-pied">
+        <li><a href="mentions-legales.html">Mentions légales</a></li>
+        <li><a href="mentions-legales.html#conditions">Conditions d'utilisation</a></li>
+        <li><a href="mentions-legales.html#confidentialite">Confidentialité</a></li>
+        <li><a href="a-propos.html">En savoir plus</a></li>
+      </ul>
+    </nav>
   </div>`;
 
 // Page actuelle avec ses paramètres, pour y revenir après la connexion (ex. « set.html?id=sv08.5 »)

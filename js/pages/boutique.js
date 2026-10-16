@@ -112,6 +112,7 @@ fenetre.addEventListener("close", async () => {
 // ---------- Comment gagner des pièces ----------
 
 document.getElementById("gains").innerHTML = [
+  ["Bienvenue", `+${GAINS.bienvenue} pièces offertes à ta première connexion`],
   ["Connexion quotidienne", `+${GAINS.connexion} pièces par jour, plus ${piecesBadge("connexion-7")} pièces au bout de 7 jours d'affilée et ${piecesBadge("connexion-30")} au bout de 30 jours`],
   ["Ajout de cartes", `+${piecesBadge("cartes-10")} pièces à 10, 50, 100 et 500 cartes, +${piecesBadge("cartes-1000")} à 1 000`],
   ["Set complété", `+${GAINS.setComplete} pièces pour chaque set terminé, +${piecesBadge("sets-5")} au 5ᵉ`],
