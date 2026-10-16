@@ -216,7 +216,8 @@ function afficherProfil() {
         <h2 id="titre-favorites">Cartes favorites</h2>
         ${profil.favorites?.length
           ? `<div class="favorites">${profil.favorites.map(miniCarte).join("")}</div>`
-          : '<p class="aide-resultats">Choisis jusqu\'à 3 cartes de ta collection avec « Modifier le profil ».</p>'}
+          : `<p class="aide-resultats">Pas encore de carte favorite. Ouvre une carte de ta collection et choisis « ♡ Ajouter aux favorites ».</p>
+             <a class="bouton bouton-petit" href="collection.html">Aller à ma collection</a>`}
       </section>
       <section class="panneau" aria-labelledby="titre-visibilite">
         <h2 id="titre-visibilite">Visibilité</h2>
@@ -327,7 +328,8 @@ zone.addEventListener("submit", async (evenement) => {
 // ---------- Modifier le profil ----------
 
 function optionsCartes(selection) {
-  const triees = [...collection].sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+  const horsCollection = (profil.favorites ?? []).filter((f) => !collection.some((e) => e.id === f.id));
+  const triees = [...collection, ...horsCollection].sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
   return '<option value="">Aucune</option>' + triees.map((entree) => {
     const numero = entree.set?.officiel ? `${entree.numero}/${entree.set.officiel}` : entree.numero;
     return `<option value="${echapper(entree.id)}"${entree.id === selection ? " selected" : ""}>${echapper(`${entree.nom} · ${entree.set?.nom ?? ""} ${numero}`)}</option>`;
@@ -343,7 +345,7 @@ function ouvrirModification() {
   document.getElementById("groupe-badge").hidden = obtenus.length === 0;
   document.getElementById("champ-badge").innerHTML = '<option value="">Aucun</option>'
     + obtenus.map((badge) => `<option value="${badge.cle}"${badge.cle === profil.badge ? " selected" : ""}>${echapper(badge.nom)}</option>`).join("");
-  document.getElementById("groupe-favorites").hidden = collection.length === 0;
+  document.getElementById("groupe-favorites").hidden = collection.length === 0 && !profil.favorites?.length;
   [1, 2, 3].forEach((rang) => {
     document.getElementById(`favorite-${rang}`).innerHTML = optionsCartes(profil.favorites?.[rang - 1]?.id);
   });
@@ -363,7 +365,7 @@ document.getElementById("formulaire-profil").addEventListener("submit", async (e
   }
   const ids = [...new Set([1, 2, 3].map((rang) => document.getElementById(`favorite-${rang}`).value).filter(Boolean))];
   const favorites = ids.map((id) => {
-    const entree = collection.find((e) => e.id === id);
+    const entree = collection.find((e) => e.id === id) ?? profil.favorites.find((f) => f.id === id);
     return { id: entree.id, nom: entree.nom, numero: entree.numero, image: entree.image, set: entree.set };
   });
   profil = await enregistrerProfil({
@@ -426,5 +428,5 @@ let chase_;
 ]);
 chase = chase_.cartes;
 valeurs = await mesures(recompenses);
-if (profil) afficherProfil();
+if (profil?.pseudo) afficherProfil();
 else afficherCreation();

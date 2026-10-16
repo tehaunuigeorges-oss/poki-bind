@@ -71,6 +71,24 @@ export async function getProfil() {
   return lire("profil", null);
 }
 
+export const MAX_FAVORITES = 3;
+
+// Ajoute la carte aux favorites, ou l'en retire si elle y est déjà.
+// Renvoie { favorite: true | false, plein: true si les 3 places sont déjà prises }.
+// Les favorites sont gardées même si le profil n'est pas encore créé.
+export async function basculerFavorite(carte) {
+  const profil = lire("profil", null) ?? {};
+  const favorites = Array.isArray(profil.favorites) ? profil.favorites : [];
+  if (favorites.some((f) => f.id === carte.id)) {
+    ecrire("profil", { ...profil, favorites: favorites.filter((f) => f.id !== carte.id) });
+    return { favorite: false, plein: false };
+  }
+  if (favorites.length >= MAX_FAVORITES) return { favorite: false, plein: true };
+  const { id, nom, numero, image, set } = carte;
+  ecrire("profil", { ...profil, favorites: [...favorites, { id, nom, numero, image, set }] });
+  return { favorite: true, plein: false };
+}
+
 export async function enregistrerProfil(profil) {
   const actuel = lire("profil", null);
   const nouveau = { visibilite: "prive", favorites: [], ...actuel, ...profil, creeLe: actuel?.creeLe ?? new Date().toISOString() };

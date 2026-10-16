@@ -3,7 +3,7 @@
 
 import { getCarte, getSet, setDeCarte, variantesDeCarte, resumeCarte, numeroLisible, imageDeSecours, getSerie, ErreurTcgdex } from "../tcgdex.js";
 import { getCarteDeCollection, ajouterCarte, retirerCarte, getBinders, placerCarte, nombreDeCartes, nombreExemplaires,
-  placementsDe, ErreurBinder, getChaseCard, enregistrerChaseCard, retirerChaseCard } from "../donnees.js";
+  placementsDe, ErreurBinder, getChaseCard, enregistrerChaseCard, retirerChaseCard, getProfil, basculerFavorite, MAX_FAVORITES } from "../donnees.js";
 import { visuelCarte, illustration } from "../visuel-carte.js";
 import { echapper, normaliser, formaterPrix, formaterMois, annoncer } from "../outils.js";
 
@@ -29,6 +29,7 @@ let variantes = [];  // voir variantesDeCarte dans tcgdex.js
 let entree = null;   // la carte dans la collection, ou null
 let choisie = "";    // variante affichée dans l'encadré des prix
 let suivie = null;   // la carte dans les chase cards, ou null
+let favorite = false; // la carte est-elle dans les favorites du profil ?
 
 const icone = (dessin) =>
   `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${dessin}</svg>`;
@@ -209,11 +210,13 @@ function afficher(set, serie) {
           <button class="bouton" id="bouton-ajouter" type="button"><span aria-hidden="true">+</span> Ajouter à ma collection</button>
           <button class="bouton bouton-secondaire" id="bouton-binder" type="button">Placer dans un binder</button>
           <button class="bouton bouton-secondaire" id="bouton-chase" type="button"></button>
+          <button class="bouton bouton-secondaire" id="bouton-favorite" type="button" aria-pressed="false"></button>
         </div>
       </div>
     </div>`;
   majQuantites();
   majBoutonChase();
+  majBoutonFavorite();
   choisir(choisie);
 }
 
@@ -283,6 +286,31 @@ const fenetreChase = document.getElementById("fenetre-chase");
 const champVariante = document.getElementById("chase-variante");
 const champPrixMax = document.getElementById("chase-prix-max");
 const erreurPrixMax = document.getElementById("erreur-prix-max");
+
+function majBoutonFavorite() {
+  const bouton = document.getElementById("bouton-favorite");
+  bouton.setAttribute("aria-pressed", String(favorite));
+  bouton.innerHTML = favorite
+    ? '<span aria-hidden="true">♥</span> Dans tes favorites'
+    : '<span aria-hidden="true">♡</span> Ajouter aux favorites';
+}
+
+async function changerFavorite() {
+  let resultat;
+  try {
+    resultat = await basculerFavorite(resumeCarte(carte));
+  } catch (erreur) {
+    annoncer("Impossible d'enregistrer : le stockage de ton navigateur est bloqué ou plein.");
+    return;
+  }
+  if (resultat.plein) {
+    annoncer(`Tu as déjà ${MAX_FAVORITES} cartes favorites : retire-en une (sur sa fiche ou dans ton profil) pour ajouter celle-ci.`);
+    return;
+  }
+  favorite = resultat.favorite;
+  majBoutonFavorite();
+  annoncer(favorite ? `${carte.name} est dans tes cartes favorites, visibles sur ton profil.` : `${carte.name} n'est plus dans tes favorites.`);
+}
 
 function majBoutonChase() {
   const bouton = document.getElementById("bouton-chase");
@@ -399,6 +427,7 @@ zone.addEventListener("click", (evenement) => {
   else if (bouton.id === "bouton-ajouter") changerQuantite(choisie, 1);
   else if (bouton.id === "bouton-binder") ouvrirFenetrePlacer();
   else if (bouton.id === "bouton-chase") ouvrirFenetreChase();
+  else if (bouton.id === "bouton-favorite") changerFavorite();
   else if (bouton.id === "bouton-reessayer") charger();
 });
 
@@ -412,15 +441,17 @@ async function charger() {
   zone.setAttribute("aria-busy", "true");
   zone.innerHTML = squelette;
   try {
-    const [donnees, set, possedee, chase] = await Promise.all([
+    const [donnees, set, possedee, chase, profilLu] = await Promise.all([
       getCarte(id),
       getSet(setDeCarte(id)).catch(() => null), // sans le set, la fiche s'affiche sans série ni date
       getCarteDeCollection(id),
       getChaseCard(id),
+      getProfil(),
     ]);
     carte = donnees;
     entree = possedee;
     suivie = chase;
+    favorite = Boolean(profilLu?.favorites?.some((f) => f.id === id));
     variantes = variantesDeCarte(carte);
     const existantes = variantes.filter((v) => v.existe);
     choisie = (existantes.find((v) => entree?.variantes[v.cle]) ?? existantes[0]).cle;
